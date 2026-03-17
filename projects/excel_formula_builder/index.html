@@ -274,7 +274,7 @@
             { label: '¶', add: '&char(10)&' },
             { label: '¶<br>¶', add: '&char(10)&"<br>"&char(10)&' },
             { label: '&', add: '&' },
-            { label: '<p>¶Dimension(s):¶<br>¶', add: '"<p>"&char(10)&"<strong>Dimension(s):</strong>"&char(10)&"<br>"&char(10)&' },
+            { label: '<p>¶Dimension(s):¶<br>¶', add: '="<p>"&char(10)&"<strong>Dimension(s):</strong>"&char(10)&"<br>"&char(10)&' },
             { label: '<br><br>¶Load Rating(s):¶<br>¶', add: '&char(10)&"<br><br>"&char(10)&"<strong>Load Rating(s):</strong>"&char(10)&"<br>"&char(10)&' },
             { label: '_(', add: '&" ("&' },
             { label: ')_=_', add: '&") = "&' },
@@ -331,6 +331,7 @@
             formulaInput.focus();
             const newPos = start + text.length;
             formulaInput.setSelectionRange(newPos, newPos);
+            saveFormula();
         }
 
         // --- Rendering ---
@@ -480,6 +481,7 @@
 
         clearBtn.onclick = () => {
             formulaInput.value = '';
+            saveFormula();
             formulaInput.focus();
         };
 
@@ -529,6 +531,17 @@
             localStorage.setItem('excel_formula_presets', JSON.stringify(presets));
         }
 
+        function saveFormula() {
+            localStorage.setItem('excel_current_formula', formulaInput.value);
+        }
+
+        function loadFormula() {
+            const saved = localStorage.getItem('excel_current_formula');
+            if (saved) {
+                formulaInput.value = saved;
+            }
+        }
+
         function loadPresets() {
             const saved = localStorage.getItem('excel_formula_presets');
             if (saved) {
@@ -552,12 +565,15 @@
 
             loadTheme();
             loadPresets();
+            loadFormula();
             renderPresets();
             renderGrid();
             lucide.createIcons();
         }
 
         init();
+
+        formulaInput.oninput = saveFormula;
 
         // Handle window resize
         window.onresize = renderGrid;
