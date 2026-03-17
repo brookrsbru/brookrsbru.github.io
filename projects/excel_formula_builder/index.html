@@ -6,6 +6,11 @@
     <title>Excel Formula Architect - Builder</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M30 50h40M50 30v40%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -408,9 +413,9 @@
                     const isRowHovered = hoveredCell && hoveredCell.r === r;
                     const isColHovered = hoveredCell && hoveredCell.c === c;
                     
-                    let bgClass = 'bg-white';
-                    if (isHovered) bgClass = 'bg-blue-100 ring-1 ring-inset ring-blue-400 z-10';
-                    else if (isRowHovered || isColHovered) bgClass = 'bg-blue-50/50';
+                    let bgClass = 'bg-white dark:bg-zinc-950';
+                    if (isHovered) bgClass = 'bg-blue-100 dark:bg-blue-900/40 ring-1 ring-inset ring-blue-400 dark:ring-blue-500 z-10';
+                    else if (isRowHovered || isColHovered) bgClass = 'bg-blue-50/50 dark:bg-blue-900/10';
 
                     html += `
                         <div class="cell ${bgClass}" 
