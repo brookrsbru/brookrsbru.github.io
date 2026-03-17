@@ -186,6 +186,18 @@
         const clearBtn = document.getElementById('clear-btn');
 
         // --- Utilities ---
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[m];
+            });
+        }
+
         function getColumnName(index) {
             let name = "";
             let i = index;
@@ -213,10 +225,10 @@
                     <span class="text-xs font-mono text-zinc-400 mb-1 group-hover:text-blue-400">Label:</span>
                     <span class="text-sm font-medium text-zinc-700 break-all leading-tight">
                         ${btn.label.split('¶').map((part, i, arr) => `
-                            ${part}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
+                            ${escapeHTML(part)}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
                         `).join('')}
                     </span>
-                    <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${btn.add}</div>
+                    <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
                 </button>
             `).join('');
 
