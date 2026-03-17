@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excel Formula Architect - Builder</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><path d=%22M30 50h40M50 30v40%22 stroke=%22white%22 stroke-width=%2210%22 stroke-linecap=%22round%22/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .dark { color-scheme: dark; }
         
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
         /* Grid Styles */
         #grid-container {
@@ -23,6 +27,7 @@
             overflow: auto;
             background-color: #f9fafb;
         }
+        .dark #grid-container { background-color: #09090b; }
         #grid-spacer {
             position: absolute;
             top: 0;
@@ -47,10 +52,17 @@
             cursor: pointer;
             user-select: none;
         }
+        .dark .cell {
+            background: #09090b;
+            border-right-color: #27272a;
+            border-bottom-color: #27272a;
+            color: #f4f4f5;
+        }
         .cell:hover {
             background-color: #eff6ff;
             z-index: 5;
         }
+        .dark .cell:hover { background-color: #1e1b4b; }
         .header-cell {
             position: absolute;
             background-color: #f3f4f6;
@@ -65,10 +77,20 @@
             user-select: none;
             z-index: 10;
         }
+        .dark .header-cell {
+            background-color: #18181b;
+            border-right-color: #3f3f46;
+            border-bottom-color: #3f3f46;
+            color: #a1a1aa;
+        }
         .header-cell.active {
             background-color: #dbeafe;
             color: #1d4ed8;
             font-weight: 700;
+        }
+        .dark .header-cell.active {
+            background-color: #1e3a8a;
+            color: #60a5fa;
         }
         .corner-cell {
             position: absolute;
@@ -80,6 +102,11 @@
             border-right: 1px solid #d1d5db;
             border-bottom: 1px solid #d1d5db;
             z-index: 30;
+        }
+        .dark .corner-cell {
+            background-color: #18181b;
+            border-right-color: #3f3f46;
+            border-bottom-color: #3f3f46;
         }
         #col-headers {
             position: sticky;
@@ -143,9 +170,13 @@
             max-width: 90%;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
+        .dark .modal-content {
+            background: #18181b;
+            color: #f4f4f5;
+        }
     </style>
 </head>
-<body class="bg-white text-zinc-900 h-screen flex overflow-hidden">
+<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 h-screen flex overflow-hidden transition-colors duration-300">
 
     <!-- Main Workspace -->
     <div class="flex-1 flex flex-col min-w-0 relative">
@@ -159,21 +190,25 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="w-[40%] h-full flex flex-col border-l border-zinc-300 bg-zinc-50">
+    <div class="w-[40%] h-full flex flex-col border-l border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
         <!-- Formula Editor -->
         <div class="flex-1 p-6 flex flex-col min-h-0">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
-                    <a href="/" class="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors" title="Back to Home">
+                    <a href="/" class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors" title="Back to Home">
                         <i data-lucide="home" class="w-4 h-4"></i>
                     </a>
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Formula Editor</h2>
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Formula Editor</h2>
                 </div>
                 <div class="flex gap-2">
-                    <button id="clear-btn" class="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Clear Formula">
+                    <button id="theme-toggle" class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors" title="Toggle Theme">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-yellow-500"></i>
+                    </button>
+                    <button id="clear-btn" class="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Clear Formula">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
-                    <button id="copy-btn" class="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors" title="Copy to Clipboard">
+                    <button id="copy-btn" class="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors" title="Copy to Clipboard">
                         <i data-lucide="copy" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -181,15 +216,15 @@
             <div class="flex-1 relative">
                 <textarea id="formula-input" 
                     placeholder="Select cells or use buttons to build your formula..."
-                    class="w-full h-full p-4 bg-white border border-zinc-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none font-mono text-sm leading-relaxed transition-all"></textarea>
+                    class="w-full h-full p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none font-mono text-sm leading-relaxed transition-all dark:text-zinc-100"></textarea>
             </div>
         </div>
 
         <!-- Presets -->
-        <div class="h-[350px] border-t border-zinc-200 bg-white overflow-y-auto custom-scrollbar">
-            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4 flex items-center justify-between">
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Presets</h2>
-                <button id="manage-presets-btn" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">Manage</button>
+        <div class="h-[350px] border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-y-auto custom-scrollbar">
+            <div class="sticky top-0 bg-white dark:bg-zinc-950 z-10 px-6 pt-6 pb-4 flex items-center justify-between">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Presets</h2>
+                <button id="manage-presets-btn" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline">Manage</button>
             </div>
             <div id="presets-container" class="px-6 pb-6 grid grid-cols-3 gap-3">
                 <!-- Presets will be rendered here via JS -->
@@ -201,20 +236,20 @@
     <div id="manage-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-zinc-900">Add New Preset</h3>
-                <button id="close-modal" class="text-zinc-400 hover:text-zinc-600">
+                <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Add New Preset</h3>
+                <button id="close-modal" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Label</label>
-                    <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">Label</label>
+                    <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-zinc-100">
                     <p class="mt-1 text-[10px] text-zinc-400 italic">Use ¶ for line-break indicators</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Formula Snippet</label>
-                    <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all h-24 resize-none font-mono text-sm"></textarea>
+                    <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">Formula Snippet</label>
+                    <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all h-24 resize-none font-mono text-sm dark:text-zinc-100"></textarea>
                 </div>
                 <button id="save-preset-btn" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">Save Preset</button>
             </div>
@@ -251,6 +286,7 @@
         const presetsContainer = document.getElementById('presets-container');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const themeToggle = document.getElementById('theme-toggle');
         const managePresetsBtn = document.getElementById('manage-presets-btn');
         const manageModal = document.getElementById('manage-modal');
         const closeModalBtn = document.getElementById('close-modal');
@@ -295,14 +331,14 @@
         function renderPresets() {
             presetsContainer.innerHTML = presets.map((btn, index) => `
                 <div class="preset-btn-wrapper relative group">
-                    <button class="preset-btn w-full flex flex-col items-start p-3 bg-zinc-50 border border-zinc-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all text-left group" data-index="${index}">
+                    <button class="preset-btn w-full flex flex-col items-start p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:shadow-sm transition-all text-left group" data-index="${index}">
                         <span class="text-xs font-mono text-zinc-400 mb-1 group-hover:text-blue-400"></span>
-                        <span class="text-sm font-medium text-zinc-700 break-all leading-tight">
+                        <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 break-all leading-tight">
                             ${btn.label.split('¶').map((part, i, arr) => `
                                 ${escapeHTML(part)}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
                             `).join('')}
                         </span>
-                        <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
+                        <div class="mt-2 text-[10px] text-zinc-400 dark:text-zinc-500 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
                     </button>
                     ${isManageMode ? `
                         <button class="preset-delete-btn opacity-100" data-delete-index="${index}">
@@ -441,6 +477,12 @@
             formulaInput.focus();
         };
 
+        themeToggle.onclick = () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            renderGrid();
+        };
+
         managePresetsBtn.onclick = () => {
             isManageMode = !isManageMode;
             managePresetsBtn.textContent = isManageMode ? 'Done' : 'Manage';
@@ -490,12 +532,19 @@
             }
         }
 
+        function loadTheme() {
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
         // --- Initialization ---
         function init() {
             // Set spacer size
             gridSpacer.style.width = (ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH) + 'px';
             gridSpacer.style.height = (HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT) + 'px';
 
+            loadTheme();
             loadPresets();
             renderPresets();
             renderGrid();
