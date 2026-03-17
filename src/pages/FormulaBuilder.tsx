@@ -3,7 +3,7 @@ import { FixedSizeGrid } from 'react-window';
 import { getColumnName } from '../utils';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, Trash2, Home } from 'lucide-react';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -181,7 +181,16 @@ export default function FormulaBuilder() {
       <div className="w-[450px] h-full flex flex-col border-l border-zinc-300 bg-zinc-50">
         <div className="flex-1 p-6 flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Formula Editor</h2>
+            <div className="flex items-center gap-3">
+              <a 
+                href="index.html" 
+                className="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors"
+                title="Back to Home"
+              >
+                <Home size={18} />
+              </a>
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Formula Editor</h2>
+            </div>
             <div className="flex gap-2">
               <button 
                 onClick={() => setFormula('')}
