@@ -12,7 +12,7 @@ export default defineConfig(({mode}) => {
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
-          builder: path.resolve(__dirname, 'builder.html'),
+          builder: path.resolve(__dirname, 'projects/excel_formula_builder/'),
         },
       },
     },
