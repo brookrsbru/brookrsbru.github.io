@@ -97,6 +97,52 @@
             z-index: 20;
             background: #f3f4f6;
         }
+        /* Presets */
+        .preset-btn {
+            position: relative;
+        }
+        .preset-delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .preset-btn:hover .preset-delete-btn {
+            opacity: 1;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="bg-white text-zinc-900 h-screen flex overflow-hidden">
@@ -141,11 +187,36 @@
 
         <!-- Presets -->
         <div class="h-[350px] border-t border-zinc-200 bg-white overflow-y-auto custom-scrollbar">
-            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4">
+            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4 flex items-center justify-between">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Presets</h2>
+                <button id="manage-presets-btn" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">Manage</button>
             </div>
             <div id="presets-container" class="px-6 pb-6 grid grid-cols-3 gap-3">
                 <!-- Presets will be rendered here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Presets Modal -->
+    <div id="manage-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-zinc-900">Add New Preset</h3>
+                <button id="close-modal" class="text-zinc-400 hover:text-zinc-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Label</label>
+                    <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
+                    <p class="mt-1 text-[10px] text-zinc-400 italic">Use ¶ for line-break indicators</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Formula Snippet</label>
+                    <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all h-24 resize-none font-mono text-sm"></textarea>
+                </div>
+                <button id="save-preset-btn" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">Save Preset</button>
             </div>
         </div>
     </div>
@@ -159,22 +230,18 @@
         const HEADER_HEIGHT = 30;
         const ROW_HEADER_WIDTH = 40;
 
-        const PRESETS = [
+        const DEFAULT_PRESETS = [
             { label: '¶', add: '&char(10)&' },
             { label: '¶<br>¶', add: '&char(10)&"<br>"&char(10)&' },
             { label: '<p>¶Dimension(s):¶<br>¶', add: '"<p>"&char(10)&"<strong>Dimension(s):</strong>"&char(10)&"<br>"&char(10)&' },
             { label: '<br><br>¶Load Rating(s):¶<br>¶', add: '&char(10)&"<br><br>"&char(10)&"<strong>Load Rating(s):</strong>"&char(10)&"<br>"&char(10)&' },
             { label: '_(', add: '&" ("&' },
             { label: ')_=_', add: '&") = "&' },
-            { label: 'IFERROR', add: 'IFERROR(' },
-            { label: 'VLOOKUP', add: 'VLOOKUP(' },
-            { label: 'CONCATENATE', add: 'CONCATENATE(' },
-            { label: 'TEXTJOIN', add: 'TEXTJOIN(", ", TRUE, ' },
-            { label: 'SUBSTITUTE', add: 'SUBSTITUTE(' },
-            { label: 'TRIM', add: 'TRIM(' },
         ];
 
+        let presets = [];
         let hoveredCell = null;
+        let isManageMode = false;
 
         // --- DOM Elements ---
         const gridContainer = document.getElementById('grid-container');
@@ -184,6 +251,12 @@
         const presetsContainer = document.getElementById('presets-container');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const managePresetsBtn = document.getElementById('manage-presets-btn');
+        const manageModal = document.getElementById('manage-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        const savePresetBtn = document.getElementById('save-preset-btn');
+        const newPresetLabel = document.getElementById('new-preset-label');
+        const newPresetAdd = document.getElementById('new-preset-add');
 
         // --- Utilities ---
         function escapeHTML(str) {
@@ -220,21 +293,45 @@
 
         // --- Rendering ---
         function renderPresets() {
-            presetsContainer.innerHTML = PRESETS.map(btn => `
-                <button class="preset-btn flex flex-col items-start p-3 bg-zinc-50 border border-zinc-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all text-left group" data-add='${btn.add}'>
-                    <span class="text-xs font-mono text-zinc-400 mb-1 group-hover:text-blue-400">Label:</span>
-                    <span class="text-sm font-medium text-zinc-700 break-all leading-tight">
-                        ${btn.label.split('¶').map((part, i, arr) => `
-                            ${escapeHTML(part)}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
-                        `).join('')}
-                    </span>
-                    <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
-                </button>
+            presetsContainer.innerHTML = presets.map((btn, index) => `
+                <div class="preset-btn-wrapper relative group">
+                    <button class="preset-btn w-full flex flex-col items-start p-3 bg-zinc-50 border border-zinc-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all text-left group" data-index="${index}">
+                        <span class="text-xs font-mono text-zinc-400 mb-1 group-hover:text-blue-400"></span>
+                        <span class="text-sm font-medium text-zinc-700 break-all leading-tight">
+                            ${btn.label.split('¶').map((part, i, arr) => `
+                                ${escapeHTML(part)}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
+                            `).join('')}
+                        </span>
+                        <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
+                    </button>
+                    ${isManageMode ? `
+                        <button class="preset-delete-btn opacity-100" data-delete-index="${index}">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                        </button>
+                    ` : ''}
+                </div>
             `).join('');
 
             document.querySelectorAll('.preset-btn').forEach(btn => {
-                btn.onclick = () => insertAtCursor(btn.getAttribute('data-add'));
+                btn.onclick = () => {
+                    const index = parseInt(btn.getAttribute('data-index'));
+                    insertAtCursor(presets[index].add);
+                };
             });
+
+            if (isManageMode) {
+                document.querySelectorAll('.preset-delete-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        const index = parseInt(btn.getAttribute('data-delete-index'));
+                        presets.splice(index, 1);
+                        savePresets();
+                        renderPresets();
+                        lucide.createIcons();
+                    };
+                });
+            }
+            lucide.createIcons();
         }
 
         function renderGrid() {
@@ -344,12 +441,62 @@
             formulaInput.focus();
         };
 
+        managePresetsBtn.onclick = () => {
+            isManageMode = !isManageMode;
+            managePresetsBtn.textContent = isManageMode ? 'Done' : 'Manage';
+            managePresetsBtn.classList.toggle('text-blue-600', !isManageMode);
+            managePresetsBtn.classList.toggle('text-zinc-600', isManageMode);
+            
+            if (isManageMode) {
+                manageModal.style.display = 'flex';
+            }
+            renderPresets();
+        };
+
+        closeModalBtn.onclick = () => {
+            manageModal.style.display = 'none';
+        };
+
+        savePresetBtn.onclick = () => {
+            const label = newPresetLabel.value.trim();
+            const add = newPresetAdd.value.trim();
+            
+            if (label && add) {
+                presets.push({ label, add });
+                savePresets();
+                renderPresets();
+                newPresetLabel.value = '';
+                newPresetAdd.value = '';
+                manageModal.style.display = 'none';
+            }
+        };
+
+        window.onclick = (e) => {
+            if (e.target === manageModal) {
+                manageModal.style.display = 'none';
+            }
+        };
+
+        function savePresets() {
+            localStorage.setItem('excel_formula_presets', JSON.stringify(presets));
+        }
+
+        function loadPresets() {
+            const saved = localStorage.getItem('excel_formula_presets');
+            if (saved) {
+                presets = JSON.parse(saved);
+            } else {
+                presets = [...DEFAULT_PRESETS];
+            }
+        }
+
         // --- Initialization ---
         function init() {
             // Set spacer size
             gridSpacer.style.width = (ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH) + 'px';
             gridSpacer.style.height = (HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT) + 'px';
 
+            loadPresets();
             renderPresets();
             renderGrid();
             lucide.createIcons();
