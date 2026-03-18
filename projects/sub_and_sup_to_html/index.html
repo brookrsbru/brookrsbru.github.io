@@ -30,13 +30,13 @@
                 <div class="flex items-center justify-between mb-3">
                     <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">Input Text</label>
                     <div class="flex gap-2">
-                        <button id="sup-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
+                        <button id="sup-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Ctrl + 1">
                             <i data-lucide="chevrons-up" class="w-3.5 h-3.5"></i>
-                            Superscript
+                            Superscript <span class="text-[10px] opacity-50 font-mono ml-1">^1</span>
                         </button>
-                        <button id="sub-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
+                        <button id="sub-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Ctrl + 2">
                             <i data-lucide="chevrons-down" class="w-3.5 h-3.5"></i>
-                            Subscript
+                            Subscript <span class="text-[10px] opacity-50 font-mono ml-1">^2</span>
                         </button>
                     </div>
                 </div>
@@ -161,6 +161,18 @@
             }
             return result;
         }
+
+        input.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === '1') {
+                    e.preventDefault();
+                    wrapSelection('sup');
+                } else if (e.key === '2') {
+                    e.preventDefault();
+                    wrapSelection('sub');
+                }
+            }
+        });
 
         input.addEventListener('input', () => {
             const converted = convert(input.value);
