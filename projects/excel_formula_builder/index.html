@@ -247,12 +247,27 @@
 
         <!-- Presets -->
         <div class="h-[350px] border-t border-zinc-200 bg-white overflow-y-auto custom-scrollbar">
-            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4 flex items-center justify-between">
+            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4 flex items-center justify-between border-b border-zinc-100 mb-2">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Presets</h2>
-                <button id="tools-btn" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1">
-                    <i data-lucide="settings-2" class="w-3 h-3"></i>
-                    Tools
-                </button>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center bg-zinc-100 rounded-lg p-1 gap-1">
+                        <div class="flex items-center gap-1 px-1">
+                            <span class="text-[10px] font-bold text-zinc-400">R</span>
+                            <input type="number" id="shift-rows" value="0" class="w-10 bg-transparent text-xs font-bold outline-none text-center" title="Row Offset">
+                        </div>
+                        <div class="w-px h-3 bg-zinc-300"></div>
+                        <div class="flex items-center gap-1 px-1">
+                            <span class="text-[10px] font-bold text-zinc-400">C</span>
+                            <input type="number" id="shift-cols" value="0" class="w-10 bg-transparent text-xs font-bold outline-none text-center" title="Column Offset">
+                        </div>
+                        <button id="apply-shift-btn" class="p-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors" title="Shift Selection/Formula">
+                            <i data-lucide="move" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <button id="tools-btn" class="p-1.5 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Preset Settings">
+                        <i data-lucide="settings-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
             <div id="presets-container" class="px-6 pb-6 grid grid-cols-3 gap-3">
                 <!-- Presets will be rendered here via JS -->
@@ -262,52 +277,31 @@
 
     <!-- Formula Tools Modal -->
     <div id="tools-modal" class="modal-overlay">
-        <div class="modal-content w-[450px]">
+        <div class="modal-content w-[400px]">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-zinc-900">Formula Tools</h3>
+                <h3 class="text-lg font-bold text-zinc-900">Manage Presets</h3>
                 <button id="close-tools-modal" class="text-zinc-400 hover:text-zinc-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             
-            <div class="space-y-8">
-                <!-- Shift References Section -->
-                <div class="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                    <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <i data-lucide="move" class="w-3 h-3"></i>
-                        Shift Cell References
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Rows Offset</label>
-                            <input type="number" id="shift-rows" value="0" class="w-full p-2 bg-white border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Cols Offset</label>
-                            <input type="number" id="shift-cols" value="0" class="w-full p-2 bg-white border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all">
-                        </div>
-                    </div>
-                    <button id="apply-shift-btn" class="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm">Apply Shift to Formula</button>
-                    <p class="mt-2 text-[10px] text-blue-500 italic text-center">This will update all A1-style references in your formula.</p>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <span class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Delete Mode</span>
+                    <button id="toggle-manage-mode" class="text-xs font-bold text-blue-600 hover:underline">Enable</button>
                 </div>
 
-                <!-- Manage Presets Section -->
-                <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <h4 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Manage Presets</h4>
-                        <button id="toggle-manage-mode" class="text-[10px] font-bold text-blue-600 hover:underline">Enable Delete Mode</button>
+                <div class="space-y-4 pt-4 border-t border-zinc-100">
+                    <h4 class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Add New Preset</h4>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Label</label>
+                        <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all">
                     </div>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Label</label>
-                            <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Snippet</label>
-                            <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all h-20 resize-none font-mono"></textarea>
-                        </div>
-                        <button id="save-preset-btn" class="w-full py-2.5 bg-zinc-900 text-white text-sm font-bold rounded-lg hover:bg-black transition-all">Add Preset</button>
+                    <div>
+                        <label class="block text-[10px] font-bold text-zinc-500 uppercase mb-1">Snippet</label>
+                        <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm outline-none focus:border-blue-500 transition-all h-20 resize-none font-mono"></textarea>
                     </div>
+                    <button id="save-preset-btn" class="w-full py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-all shadow-sm">Add Preset</button>
                 </div>
             </div>
         </div>
@@ -323,13 +317,13 @@
         const ROW_HEADER_WIDTH = 40;
 
         const DEFAULT_PRESETS = [
-            { label: '¶', add: '&char(10)&' },
-            { label: '¶<br>¶', add: '&char(10)&"<br>"&char(10)&' },
-            { label: '&', add: '&' },
-            { label: '<p>¶Dimension(s):¶<br>¶', add: '="<p>"&char(10)&"<strong>Dimension(s):</strong>"&char(10)&"<br>"&char(10)&' },
-            { label: '<br><br>¶Load Rating(s):¶<br>¶', add: '&char(10)&"<br><br>"&char(10)&"<strong>Load Rating(s):</strong>"&char(10)&"<br>"&char(10)&' },
-            { label: '_(', add: '&" ("&' },
-            { label: ')_=_', add: '&") = "&' },
+            { label: '¶', add: '&char(10)&', isDefault: true },
+            { label: '¶<br>¶', add: '&char(10)&"<br>"&char(10)&', isDefault: true },
+            { label: '&', add: '&', isDefault: true },
+            { label: '<p>¶Dimension(s):¶<br>¶', add: '="<p>"&char(10)&"<strong>Dimension(s):</strong>"&char(10)&"<br>"&char(10)&', isDefault: true },
+            { label: '<br><br>¶Load Rating(s):¶<br>¶', add: '&char(10)&"<br><br>"&char(10)&"<strong>Load Rating(s):</strong>"&char(10)&"<br>"&char(10)&', isDefault: true },
+            { label: '_(', add: '&" ("&', isDefault: true },
+            { label: ')_=_', add: '&") = "&', isDefault: true },
         ];
 
         let presets = [];
@@ -467,7 +461,7 @@
                         </span>
                         <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
                     </button>
-                    ${isManageMode ? `
+                    ${isManageMode && !btn.isDefault ? `
                         <button class="preset-delete-btn opacity-100" data-delete-index="${index}">
                             <i data-lucide="trash-2" class="w-3 h-3"></i>
                         </button>
@@ -640,19 +634,33 @@
             
             if (rows === 0 && cols === 0) return;
 
-            const newFormula = shiftFormula(formulaInput.value, rows, cols);
-            formulaInput.value = newFormula;
+            const start = formulaInput.selectionStart;
+            const end = formulaInput.selectionEnd;
+            const hasSelection = start !== end;
+
+            if (hasSelection) {
+                const selectedText = formulaInput.value.substring(start, end);
+                const shiftedText = shiftFormula(selectedText, rows, cols);
+                formulaInput.value = formulaInput.value.substring(0, start) + shiftedText + formulaInput.value.substring(end);
+                // Restore selection
+                formulaInput.setSelectionRange(start, start + shiftedText.length);
+            } else {
+                formulaInput.value = shiftFormula(formulaInput.value, rows, cols);
+            }
+
             saveFormula();
             updateReferences();
             
             // Visual feedback
-            const originalText = applyShiftBtn.textContent;
-            applyShiftBtn.textContent = 'Applied!';
+            const originalIcon = applyShiftBtn.innerHTML;
+            applyShiftBtn.innerHTML = '<i data-lucide="check" class="w-3 h-3"></i>';
             applyShiftBtn.classList.replace('bg-blue-600', 'bg-emerald-600');
             setTimeout(() => {
-                applyShiftBtn.textContent = originalText;
+                applyShiftBtn.innerHTML = originalIcon;
                 applyShiftBtn.classList.replace('bg-emerald-600', 'bg-blue-600');
-            }, 1500);
+                lucide.createIcons();
+            }, 1000);
+            lucide.createIcons();
         };
 
         savePresetBtn.onclick = () => {
