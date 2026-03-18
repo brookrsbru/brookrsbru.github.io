@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sub and Sup to HTML Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900 min-h-screen p-8">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-8 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/" class="p-2 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg transition-colors">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                </a>
+                <h1 class="text-2xl font-bold tracking-tight">Sub & Sup <span class="text-purple-600">to HTML</span></h1>
+            </div>
+        </header>
+
+        <div class="grid gap-6">
+            <!-- Input Area -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Input Text (with Unicode Sub/Sup)</label>
+                <textarea id="input-text" placeholder="Paste text with unicode subscripts (₀₁₂) or superscripts (⁰¹²)..." 
+                    class="w-full h-40 p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-sm outline-none focus:border-purple-500 transition-all resize-none font-mono"></textarea>
+            </div>
+
+            <!-- Output Area -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+                <div class="flex items-center justify-between mb-3">
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">HTML Output</label>
+                    <button id="copy-btn" class="flex items-center gap-2 text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        Copy HTML
+                    </button>
+                </div>
+                <div id="output-html" class="w-full min-h-[100px] p-4 bg-zinc-900 text-zinc-300 rounded-xl text-sm font-mono break-all whitespace-pre-wrap"></div>
+            </div>
+
+            <!-- Preview Area -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
+                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Rendered Preview</label>
+                <div id="preview-render" class="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-lg min-h-[60px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('input-text');
+        const output = document.getElementById('output-html');
+        const preview = document.getElementById('preview-render');
+        const copyBtn = document.getElementById('copy-btn');
+
+        const supMap = {
+            '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+            '⁺': '+', '⁻': '-', '⁼': '=', '⁽': '(', '⁾': ')', 'ᵃ': 'a', 'ᵇ': 'b', 'ᶜ': 'c', 'ᵈ': 'd', 'ᵉ': 'e',
+            'ᶠ': 'f', 'ᵍ': 'g', 'ʰ': 'h', 'ⁱ': 'i', 'ʲ': 'j', 'ᵏ': 'k', 'ˡ': 'l', 'ᵐ': 'm', 'ⁿ': 'n', 'ᵒ': 'o',
+            'ᵖ': 'p', 'ʳ': 'r', 'ˢ': 's', 'ᵗ': 't', 'ᵘ': 'u', 'ᵛ': 'v', 'ʷ': 'w', 'ˣ': 'x', 'ʸ': 'y', 'ᶻ': 'z'
+        };
+
+        const subMap = {
+            '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
+            '₊': '+', '₋': '-', '₌': '=', '₍': '(', '₎': ')', 'ₐ': 'a', 'ₑ': 'e', 'ₕ': 'h', 'ᵢ': 'i', 'ⱼ': 'j',
+            'ₖ': 'k', 'ₗ': 'l', 'ₘ': 'm', 'ₙ': 'n', 'ₒ': 'o', 'ₚ': 'p', 'ᵣ': 'r', 'ₛ': 's', 'ₜ': 't', 'ᵤ': 'u',
+            'ᵥ': 'v', 'ₓ': 'x'
+        };
+
+        function convert(text) {
+            let result = '';
+            let i = 0;
+            while (i < text.length) {
+                const char = text[i];
+                if (supMap[char]) {
+                    let supText = '';
+                    while (i < text.length && supMap[text[i]]) {
+                        supText += supMap[text[i]];
+                        i++;
+                    }
+                    result += `<sup>${supText}</sup>`;
+                } else if (subMap[char]) {
+                    let subText = '';
+                    while (i < text.length && subMap[text[i]]) {
+                        subText += subMap[text[i]];
+                        i++;
+                    }
+                    result += `<sub>${subText}</sub>`;
+                } else {
+                    result += char;
+                    i++;
+                }
+            }
+            return result;
+        }
+
+        input.addEventListener('input', () => {
+            const converted = convert(input.value);
+            output.textContent = converted;
+            preview.innerHTML = converted;
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(output.textContent);
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copied!';
+            lucide.createIcons();
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                lucide.createIcons();
+            }, 2000);
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
