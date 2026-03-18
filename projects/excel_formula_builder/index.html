@@ -333,7 +333,6 @@
 
         let presets = [];
         let hoveredCell = null;
-        let lastClickedCell = null;
         let isManageMode = false;
         let referencedCells = {}; // Map of "A1" -> color
         let currentSelection = { start: 0, end: 0 };
@@ -611,7 +610,6 @@
                     
                     const cellRef = getColumnName(c) + (r + 1);
                     const highlight = referencedCells[cellRef];
-                    const isLastClicked = lastClickedCell && lastClickedCell.r === r && lastClickedCell.c === c;
 
                     let bgClass = 'bg-white';
                     let borderClass = 'border-zinc-200';
@@ -619,9 +617,6 @@
 
                     if (isHovered) {
                         bgClass = 'bg-blue-100 ring-1 ring-inset ring-blue-400 z-10';
-                    } else if (isLastClicked) {
-                        bgClass = 'bg-blue-50';
-                        extraClass = 'ring-2 ring-inset ring-blue-500 z-10';
                     } else if (highlight) {
                         bgClass = highlight.bg;
                         extraClass = `ring-2 ring-inset ${highlight.border.replace('border-', 'ring-')} z-10`;
@@ -651,7 +646,6 @@
                 const r = parseInt(cell.getAttribute('data-r'));
                 const c = parseInt(cell.getAttribute('data-c'));
                 const ref = getColumnName(c) + (r + 1);
-                lastClickedCell = { r, c };
                 insertAtCursor(ref);
             }
         };
