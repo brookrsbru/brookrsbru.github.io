@@ -11,6 +11,10 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.3 !important;
+        }
     </style>
 </head>
 <body class="bg-zinc-50 text-zinc-900 min-h-screen p-8">
@@ -26,22 +30,31 @@
 
         <div class="grid gap-6">
             <!-- Input Area -->
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
-                <div class="flex items-center justify-between mb-3">
-                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">Input Text</label>
-                    <div class="flex gap-2">
-                        <button id="sup-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Alt + 1">
+            <div class="bg-white rounded-2xl shadow-sm border border-zinc-200 overflow-hidden focus-within:border-purple-500 transition-all">
+                <div class="flex items-center justify-between p-3 bg-zinc-50 border-b border-zinc-200">
+                    <div class="flex items-center gap-1">
+                        <button id="undo-btn" class="p-2 text-zinc-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Undo (Ctrl+Z)">
+                            <i data-lucide="undo-2" class="w-4 h-4"></i>
+                        </button>
+                        <button id="redo-btn" class="p-2 text-zinc-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all" title="Redo (Ctrl+Y)">
+                            <i data-lucide="redo-2" class="w-4 h-4"></i>
+                        </button>
+                        <div class="w-px h-4 bg-zinc-300 mx-1"></div>
+                        <button id="sup-btn" class="px-3 py-1.5 text-zinc-600 hover:text-purple-700 hover:bg-purple-100 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Superscript (Alt+1)">
                             <i data-lucide="chevrons-up" class="w-3.5 h-3.5"></i>
                             Superscript <span class="text-[10px] opacity-50 font-mono ml-1">Alt+1</span>
                         </button>
-                        <button id="sub-btn" class="px-3 py-1.5 bg-zinc-100 hover:bg-purple-100 text-zinc-600 hover:text-purple-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Alt + 2">
+                        <button id="sub-btn" class="px-3 py-1.5 text-zinc-600 hover:text-purple-700 hover:bg-purple-100 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Subscript (Alt+2)">
                             <i data-lucide="chevrons-down" class="w-3.5 h-3.5"></i>
                             Subscript <span class="text-[10px] opacity-50 font-mono ml-1">Alt+2</span>
                         </button>
                     </div>
+                    <button id="clear-btn" class="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Clear all">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
                 </div>
                 <textarea id="input-text" placeholder="Type text here, highlight parts, and use buttons, or paste unicode (₀₁₂ / ⁰¹²)..." 
-                    class="w-full h-80 p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-sm outline-none focus:border-purple-500 transition-all resize-none font-mono"></textarea>
+                    class="w-full h-80 p-4 bg-white text-sm outline-none transition-all resize-none font-mono border-none"></textarea>
             </div>
 
             <!-- Output Area -->
@@ -79,6 +92,9 @@
         const copyBtn = document.getElementById('copy-btn');
         const supBtn = document.getElementById('sup-btn');
         const subBtn = document.getElementById('sub-btn');
+        const undoBtn = document.getElementById('undo-btn');
+        const redoBtn = document.getElementById('redo-btn');
+        const clearBtn = document.getElementById('clear-btn');
         const linebreaksToggle = document.getElementById('linebreaks-toggle');
 
         linebreaksToggle.addEventListener('change', () => {
@@ -116,24 +132,44 @@
 
             const replacement = `<${tag}>${selectedText}</${tag}>`;
             
-            // Use setRangeText to modify content while preserving undo history
-            input.setRangeText(replacement, start, end, 'end');
-            
-            // Trigger input event to update output
-            input.dispatchEvent(new Event('input'));
-            
-            // Restore focus
+            // Focus and select the range to ensure execCommand targets the correct area
             input.focus();
+            input.setSelectionRange(start, end);
+            
+            // Use insertText to ensure it's added to the native undo stack
+            document.execCommand('insertText', false, replacement);
             
             // Restore scroll position after a tiny delay to override any browser auto-scrolling
             // triggered by the focus or selection change
             setTimeout(() => {
                 input.scrollTop = scrollTop;
+                updateUndoRedoState();
             }, 0);
         }
 
         supBtn.addEventListener('click', () => wrapSelection('sup'));
         subBtn.addEventListener('click', () => wrapSelection('sub'));
+        undoBtn.addEventListener('click', () => {
+            input.focus();
+            document.execCommand('undo');
+            updateUndoRedoState();
+        });
+        redoBtn.addEventListener('click', () => {
+            input.focus();
+            document.execCommand('redo');
+            updateUndoRedoState();
+        });
+        clearBtn.addEventListener('click', () => {
+            if (input.value.length > 0 && confirm('Are you sure you want to clear all text?')) {
+                input.focus();
+                input.select();
+                // Use delete command to ensure it's added to undo stack
+                document.execCommand('delete');
+                // Manually trigger input event to update output/preview
+                input.dispatchEvent(new Event('input'));
+                updateUndoRedoState();
+            }
+        });
 
         function convert(text) {
             let result = '';
@@ -178,7 +214,21 @@
             const converted = convert(input.value);
             output.textContent = converted;
             preview.innerHTML = converted;
+            updateUndoRedoState();
         });
+
+        // Update undo/redo state on focus and selection change
+        input.addEventListener('focus', updateUndoRedoState);
+        input.addEventListener('mouseup', updateUndoRedoState);
+        input.addEventListener('keyup', updateUndoRedoState);
+
+        function updateUndoRedoState() {
+            // Small timeout to allow the browser to update its internal state
+            setTimeout(() => {
+                undoBtn.disabled = !document.queryCommandEnabled('undo');
+                redoBtn.disabled = !document.queryCommandEnabled('redo');
+            }, 0);
+        }
 
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(output.textContent);
@@ -192,6 +242,7 @@
         });
 
         lucide.createIcons();
+        updateUndoRedoState();
     </script>
 </body>
 </html>
