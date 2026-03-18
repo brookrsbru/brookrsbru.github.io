@@ -94,16 +94,25 @@
             
             if (selectedText.length === 0) return;
 
-            const newText = text.substring(0, start) + `<${tag}>${selectedText}</${tag}>` + text.substring(end);
-            input.value = newText;
+            // Save scroll position
+            const scrollTop = input.scrollTop;
+
+            const replacement = `<${tag}>${selectedText}</${tag}>`;
+            
+            // Use setRangeText to modify content while preserving undo history
+            input.setRangeText(replacement, start, end, 'end');
             
             // Trigger input event to update output
             input.dispatchEvent(new Event('input'));
             
-            // Restore focus and selection
+            // Restore focus
             input.focus();
-            const newPos = start + `<${tag}>`.length + selectedText.length + `</${tag}>`.length;
-            input.setSelectionRange(newPos, newPos);
+            
+            // Restore scroll position after a tiny delay to override any browser auto-scrolling
+            // triggered by the focus or selection change
+            setTimeout(() => {
+                input.scrollTop = scrollTop;
+            }, 0);
         }
 
         supBtn.addEventListener('click', () => wrapSelection('sup'));
