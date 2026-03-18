@@ -203,6 +203,39 @@
             background-color: rgba(16, 185, 129, 0.3); /* emerald-500/30 */
             border-radius: 2px;
         }
+        .ref-active-highlight {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            font-weight: 700;
+            filter: contrast(1.2);
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 var(--pulse-color, rgba(16, 185, 129, 0.6)); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+        }
+        .active-ref-pulse {
+            animation: pulse-glow 1s infinite;
+            z-index: 40;
+            pointer-events: none;
+            border: 2px solid #10b981;
+            border-radius: 2px;
+            box-sizing: border-box;
+        }
+        .crosshair-h {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.4), transparent);
+            pointer-events: none;
+            z-index: 35;
+        }
+        .crosshair-v {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.4), transparent);
+            pointer-events: none;
+            z-index: 35;
+        }
     </style>
 </head>
 <body class="bg-white text-zinc-900 h-screen flex overflow-hidden transition-colors duration-300">
@@ -214,6 +247,11 @@
             <div id="grid-spacer"></div>
             <div id="grid-content">
                 <!-- Cells will be rendered here via JS -->
+            </div>
+            <div id="grid-indicators" class="absolute top-0 left-0 pointer-events-none" style="z-index: 35;">
+                <div id="active-pulse" class="active-ref-pulse absolute hidden"></div>
+                <div id="crosshair-h" class="crosshair-h hidden"></div>
+                <div id="crosshair-v" class="crosshair-v hidden"></div>
             </div>
         </div>
     </div>
@@ -336,6 +374,7 @@
 
         let presets = [];
         let hoveredCell = null;
+        let activeRef = null; // Reference at cursor in editor
         let isManageMode = false;
         let referencedCells = {}; // Map of "A1" -> color
         let currentSelection = { start: 0, end: 0 };
@@ -344,12 +383,12 @@
         let lastManualValue = "";
 
         const HIGHLIGHT_COLORS = [
-            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600' },
-            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600' },
-            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600' },
-            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600' },
-            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600' },
-            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600' },
+            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600', pulse: 'rgba(99, 102, 241, 0.6)' },
+            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600', pulse: 'rgba(16, 185, 129, 0.6)' },
+            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600', pulse: 'rgba(168, 85, 247, 0.6)' },
+            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600', pulse: 'rgba(249, 115, 22, 0.6)' },
+            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600', pulse: 'rgba(236, 72, 153, 0.6)' },
+            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600', pulse: 'rgba(6, 182, 212, 0.6)' },
         ];
 
         // --- DOM Elements ---
@@ -359,6 +398,9 @@
         const formulaInput = document.getElementById('formula-input');
         const formulaBackdrop = document.getElementById('formula-backdrop');
         const presetsContainer = document.getElementById('presets-container');
+        const activePulse = document.getElementById('active-pulse');
+        const crosshairH = document.getElementById('crosshair-h');
+        const crosshairV = document.getElementById('crosshair-v');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
         const undoBtn = document.getElementById('undo-btn');
@@ -404,6 +446,16 @@
             return name;
         }
 
+        function parseCellRef(ref) {
+            if (!ref) return null;
+            const match = ref.match(/^([A-Z]+)([0-9]+)$/);
+            if (!match) return null;
+            return {
+                c: getColumnIndex(match[1]),
+                r: parseInt(match[2]) - 1
+            };
+        }
+
         function shiftFormula(formula, rowOffset, colOffset) {
             const regex = /\b([A-Z]{1,3})([0-9]{1,7})\b/g;
             return formula.replace(regex, (match, colPart, rowPart) => {
@@ -429,6 +481,25 @@
         function updateUndoButton() {
             if (undoBtn) {
                 undoBtn.disabled = undoHistory.length === 0;
+            }
+        }
+
+        function updateActiveRef() {
+            const pos = formulaInput.selectionStart;
+            const formula = formulaInput.value;
+            const regex = /\b([A-Z]{1,3}[0-9]{1,7})\b/g;
+            let match;
+            let foundRef = null;
+            while ((match = regex.exec(formula)) !== null) {
+                if (pos >= match.index && pos <= match.index + match[0].length) {
+                    foundRef = match[0];
+                    break;
+                }
+            }
+            if (activeRef !== foundRef) {
+                activeRef = foundRef;
+                renderGrid();
+                renderHighlighter();
             }
         }
 
@@ -536,6 +607,12 @@
                     if (color) {
                         classes.push('highlight-ref', color.bg, color.text);
                     }
+                    
+                    // Highlight if this cell is hovered in the grid
+                    const hoveredCellRef = hoveredCell ? getColumnName(hoveredCell.c) + (hoveredCell.r + 1) : null;
+                    if (part.ref === hoveredCellRef) {
+                        classes.push('ref-active-highlight');
+                    }
                 }
                 if (part.selected) {
                     classes.push('selection-highlight');
@@ -607,19 +684,55 @@
             const endCol = Math.min(COLUMN_COUNT - 1, Math.ceil((scrollLeft + viewportWidth) / COLUMN_WIDTH));
 
             let html = '';
+            const activeCell = parseCellRef(activeRef);
 
             // Render Column Headers
             for (let c = startCol; c <= endCol; c++) {
                 const left = ROW_HEADER_WIDTH + c * COLUMN_WIDTH;
-                const isActive = hoveredCell && hoveredCell.c === c;
+                const isActive = (hoveredCell && hoveredCell.c === c) || (activeCell && activeCell.c === c);
                 html += `<div class="header-cell ${isActive ? 'active' : ''}" style="left: ${left}px; top: ${scrollTop}px; width: ${COLUMN_WIDTH}px; height: ${HEADER_HEIGHT}px;">${getColumnName(c)}</div>`;
             }
 
             // Render Row Headers
             for (let r = startRow; r <= endRow; r++) {
                 const top = HEADER_HEIGHT + r * ROW_HEIGHT;
-                const isActive = hoveredCell && hoveredCell.r === r;
+                const isActive = (hoveredCell && hoveredCell.r === r) || (activeCell && activeCell.r === r);
                 html += `<div class="header-cell ${isActive ? 'active' : ''}" style="left: ${scrollLeft}px; top: ${top}px; width: ${ROW_HEADER_WIDTH}px; height: ${ROW_HEIGHT}px;">${r + 1}</div>`;
+            }
+
+            // Update Persistent Indicators
+            if (activeCell) {
+                const top = HEADER_HEIGHT + activeCell.r * ROW_HEIGHT;
+                const left = ROW_HEADER_WIDTH + activeCell.c * COLUMN_WIDTH;
+                const cellRef = getColumnName(activeCell.c) + (activeCell.r + 1);
+                const highlight = referencedCells[cellRef];
+                const pulseColor = highlight ? highlight.pulse : 'rgba(16, 185, 129, 0.6)';
+                const borderColor = highlight ? highlight.border.replace('border-', '') : '#10b981';
+
+                // Pulse
+                activePulse.style.display = 'block';
+                activePulse.style.top = `${top}px`;
+                activePulse.style.left = `${left}px`;
+                activePulse.style.width = `${COLUMN_WIDTH}px`;
+                activePulse.style.height = `${ROW_HEIGHT}px`;
+                activePulse.style.setProperty('--pulse-color', pulseColor);
+                activePulse.style.borderColor = borderColor;
+
+                // Crosshairs
+                const hTop = top + (ROW_HEIGHT / 2) - 1;
+                const vLeft = left + (COLUMN_WIDTH / 2) - 1;
+                
+                crosshairH.style.display = 'block';
+                crosshairH.style.top = `${hTop}px`;
+                crosshairH.style.width = `${ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH}px`;
+                
+                crosshairV.style.display = 'block';
+                crosshairV.style.left = `${vLeft}px`;
+                crosshairV.style.height = `${HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT}px`;
+            } else {
+                activePulse.style.display = 'none';
+                crosshairH.style.display = 'none';
+                crosshairV.style.display = 'none';
             }
 
             // Render Cells
@@ -633,18 +746,27 @@
                     
                     const cellRef = getColumnName(c) + (r + 1);
                     const highlight = referencedCells[cellRef];
+                    const isActiveRef = activeRef === cellRef;
 
                     let bgClass = 'bg-white';
                     let borderClass = 'border-zinc-200';
                     let extraClass = '';
 
-                    if (isHovered) {
-                        bgClass = 'bg-emerald-100 ring-1 ring-inset ring-emerald-400 z-10';
-                    } else if (highlight) {
+                    if (highlight) {
                         bgClass = highlight.bg;
-                        extraClass = `ring-2 ring-inset ${highlight.border.replace('border-', 'ring-')} z-10`;
+                        borderClass = highlight.border;
+                        extraClass = `ring-1 ring-inset ${highlight.border.replace('border-', 'ring-')} z-10`;
+                    }
+
+                    if (isActiveRef) {
+                        // Pulse is now a persistent element, but we still want the cell background
+                        if (!highlight) bgClass = 'bg-emerald-50';
+                        extraClass += ' z-20'; // Keep it above others
+                    } else if (isHovered) {
+                        extraClass += ' ring-2 ring-emerald-400 ring-inset z-10';
+                        if (!highlight) bgClass = 'bg-emerald-100';
                     } else if (isRowHovered || isColHovered) {
-                        bgClass = 'bg-emerald-50/50';
+                        if (!highlight) bgClass = 'bg-emerald-50/50';
                     }
 
                     html += `
@@ -681,11 +803,13 @@
                 if (!hoveredCell || hoveredCell.r !== r || hoveredCell.c !== c) {
                     hoveredCell = { r, c };
                     renderGrid();
+                    renderHighlighter();
                 }
             } else {
                 if (hoveredCell) {
                     hoveredCell = null;
                     renderGrid();
+                    renderHighlighter();
                 }
             }
         };
@@ -693,6 +817,7 @@
         gridContent.onmouseleave = () => {
             hoveredCell = null;
             renderGrid();
+            renderHighlighter();
         };
 
         copyBtn.onclick = () => {
@@ -843,6 +968,7 @@
             currentSelection = { start: formulaInput.selectionStart, end: formulaInput.selectionEnd };
             saveFormula();
             updateReferences();
+            updateActiveRef();
         };
 
         const updateSelection = () => {
@@ -851,6 +977,7 @@
             if (start !== currentSelection.start || end !== currentSelection.end) {
                 currentSelection = { start, end };
                 renderHighlighter();
+                updateActiveRef();
             }
         };
 
@@ -871,6 +998,12 @@
             formulaBackdrop.scrollTop = formulaInput.scrollTop;
             formulaBackdrop.scrollLeft = formulaInput.scrollLeft;
         };
+
+        document.addEventListener('selectionchange', () => {
+            if (document.activeElement === formulaInput) {
+                updateActiveRef();
+            }
+        });
 
         // Handle window resize
         window.onresize = renderGrid;
