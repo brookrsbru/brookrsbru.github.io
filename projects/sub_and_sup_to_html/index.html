@@ -86,13 +86,7 @@
             'ᵥ': 'v', 'ₓ': 'x'
         };
 
-        const toSupMap = {};
-        for (const key in supMap) toSupMap[supMap[key]] = key;
-
-        const toSubMap = {};
-        for (const key in subMap) toSubMap[subMap[key]] = key;
-
-        function convertSelectionToUnicode(type) {
+        function wrapSelection(tag) {
             const start = input.selectionStart;
             const end = input.selectionEnd;
             const text = input.value;
@@ -100,14 +94,7 @@
             
             if (selectedText.length === 0) return;
 
-            const map = type === 'sup' ? toSupMap : toSubMap;
-            let convertedText = '';
-            for (const char of selectedText) {
-                const lowerChar = char.toLowerCase();
-                convertedText += map[lowerChar] || char;
-            }
-
-            const newText = text.substring(0, start) + convertedText + text.substring(end);
+            const newText = text.substring(0, start) + `<${tag}>${selectedText}</${tag}>` + text.substring(end);
             input.value = newText;
             
             // Trigger input event to update output
@@ -115,11 +102,12 @@
             
             // Restore focus and selection
             input.focus();
-            input.setSelectionRange(start, start + convertedText.length);
+            const newPos = start + `<${tag}>`.length + selectedText.length + `</${tag}>`.length;
+            input.setSelectionRange(newPos, newPos);
         }
 
-        supBtn.addEventListener('click', () => convertSelectionToUnicode('sup'));
-        subBtn.addEventListener('click', () => convertSelectionToUnicode('sub'));
+        supBtn.addEventListener('click', () => wrapSelection('sup'));
+        subBtn.addEventListener('click', () => wrapSelection('sub'));
 
         function convert(text) {
             let result = '';
