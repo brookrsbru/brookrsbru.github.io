@@ -199,6 +199,10 @@
             background-color: rgba(59, 130, 246, 0.2); /* Default fallback */
             border-radius: 2px;
         }
+        .selection-highlight {
+            background-color: rgba(59, 130, 246, 0.3);
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="bg-white text-zinc-900 h-screen flex overflow-hidden transition-colors duration-300">
@@ -329,8 +333,10 @@
 
         let presets = [];
         let hoveredCell = null;
+        let lastClickedCell = null;
         let isManageMode = false;
         let referencedCells = {}; // Map of "A1" -> color
+        let currentSelection = { start: 0, end: 0 };
 
         const HIGHLIGHT_COLORS = [
             { bg: 'bg-blue-500/20', border: 'border-blue-500', text: 'text-blue-600' },
@@ -433,20 +439,93 @@
 
         function renderHighlighter() {
             const formula = formulaInput.value;
+            const { start, end } = currentSelection;
+            const hasSelection = start !== end;
+            
             const regex = /\b([A-Z]{1,3}[0-9]{1,7})\b/g;
             
-            let highlightedHtml = escapeHTML(formula);
+            // If we have a selection, we need to be careful about overlapping highlights.
+            // We'll first identify all cell references and their positions.
+            let parts = [];
+            let lastIdx = 0;
+            let match;
             
-            highlightedHtml = escapeHTML(formula).replace(regex, (match) => {
-                const color = referencedCells[match];
-                if (color) {
-                    return `<span class="highlight-ref ${color.bg} ${color.text}">${match}</span>`;
+            // Reset regex lastIndex
+            regex.lastIndex = 0;
+            
+            while ((match = regex.exec(formula)) !== null) {
+                // Add text before match
+                if (match.index > lastIdx) {
+                    parts.push({ text: formula.substring(lastIdx, match.index), type: 'text' });
                 }
-                return match;
+                // Add match
+                parts.push({ text: match[0], type: 'ref', ref: match[0] });
+                lastIdx = regex.lastIndex;
+            }
+            // Add remaining text
+            if (lastIdx < formula.length) {
+                parts.push({ text: formula.substring(lastIdx), type: 'text' });
+            }
+
+            // Now we have a list of parts. We need to handle the selection overlay.
+            // A simpler way to handle selection that might span multiple parts:
+            // We'll render the formula with cell highlights, then overlay the selection.
+            // But since we use a backdrop, we can just wrap the selection range in a span.
+            // To handle overlapping, we'll just render the cell highlights first, 
+            // then if there's a selection, we'll apply a "selected" class to the spans or wrap the selection.
+            
+            // Actually, the most robust way is to render the whole thing as one string 
+            // and inject the selection span at the correct character offsets.
+            
+            let resultHtml = "";
+            let currentPos = 0;
+            
+            // We'll iterate character by character or use a more efficient method.
+            // Let's use the parts we already have and split them if the selection starts/ends inside them.
+            let finalParts = [];
+            parts.forEach(part => {
+                const partStart = currentPos;
+                const partEnd = currentPos + part.text.length;
+                
+                // Check if selection overlaps this part
+                const overlapStart = Math.max(partStart, start);
+                const overlapEnd = Math.min(partEnd, end);
+                
+                if (hasSelection && overlapStart < overlapEnd) {
+                    // Selection overlaps. Split the part.
+                    if (overlapStart > partStart) {
+                        finalParts.push({ ...part, text: formula.substring(partStart, overlapStart), selected: false });
+                    }
+                    finalParts.push({ ...part, text: formula.substring(overlapStart, overlapEnd), selected: true });
+                    if (overlapEnd < partEnd) {
+                        finalParts.push({ ...part, text: formula.substring(overlapEnd, partEnd), selected: false });
+                    }
+                } else {
+                    finalParts.push({ ...part, selected: false });
+                }
+                currentPos = partEnd;
             });
 
-            // Add a zero-width space if the last character is a newline to ensure the backdrop height matches
-            formulaBackdrop.innerHTML = highlightedHtml + (formula.endsWith('\n') ? ' ' : '');
+            resultHtml = finalParts.map(part => {
+                let content = escapeHTML(part.text);
+                let classes = [];
+                if (part.type === 'ref') {
+                    const color = referencedCells[part.ref];
+                    if (color) {
+                        classes.push('highlight-ref', color.bg, color.text);
+                    }
+                }
+                if (part.selected) {
+                    classes.push('selection-highlight');
+                }
+                
+                if (classes.length > 0) {
+                    return `<span class="${classes.join(' ')}">${content}</span>`;
+                }
+                return content;
+            }).join('');
+
+            formulaBackdrop.innerHTML = resultHtml + (formula.endsWith('\n') ? ' ' : '');
         }
 
         // --- Rendering ---
@@ -532,21 +611,26 @@
                     
                     const cellRef = getColumnName(c) + (r + 1);
                     const highlight = referencedCells[cellRef];
+                    const isLastClicked = lastClickedCell && lastClickedCell.r === r && lastClickedCell.c === c;
 
                     let bgClass = 'bg-white';
                     let borderClass = 'border-zinc-200';
+                    let extraClass = '';
 
                     if (isHovered) {
                         bgClass = 'bg-blue-100 ring-1 ring-inset ring-blue-400 z-10';
+                    } else if (isLastClicked) {
+                        bgClass = 'bg-blue-50';
+                        extraClass = 'ring-2 ring-inset ring-blue-500 z-10';
                     } else if (highlight) {
                         bgClass = highlight.bg;
-                        borderClass = highlight.border;
+                        extraClass = `ring-2 ring-inset ${highlight.border.replace('border-', 'ring-')} z-10`;
                     } else if (isRowHovered || isColHovered) {
                         bgClass = 'bg-blue-50/50';
                     }
 
                     html += `
-                        <div class="cell ${bgClass} ${borderClass}" 
+                        <div class="cell ${bgClass} ${borderClass} ${extraClass}" 
                              style="left: ${left}px; top: ${top}px; width: ${COLUMN_WIDTH}px; height: ${ROW_HEIGHT}px;"
                              data-r="${r}" data-c="${c}">
                         </div>`;
@@ -567,6 +651,7 @@
                 const r = parseInt(cell.getAttribute('data-r'));
                 const c = parseInt(cell.getAttribute('data-c'));
                 const ref = getColumnName(c) + (r + 1);
+                lastClickedCell = { r, c };
                 insertAtCursor(ref);
             }
         };
@@ -724,9 +809,24 @@
         init();
 
         formulaInput.oninput = () => {
+            currentSelection = { start: formulaInput.selectionStart, end: formulaInput.selectionEnd };
             saveFormula();
             updateReferences();
         };
+
+        const updateSelection = () => {
+            const start = formulaInput.selectionStart;
+            const end = formulaInput.selectionEnd;
+            if (start !== currentSelection.start || end !== currentSelection.end) {
+                currentSelection = { start, end };
+                renderHighlighter();
+            }
+        };
+
+        formulaInput.onmouseup = updateSelection;
+        formulaInput.onkeyup = updateSelection;
+        formulaInput.onfocus = updateSelection;
+        formulaInput.onblur = updateSelection;
 
         formulaInput.onscroll = () => {
             formulaBackdrop.scrollTop = formulaInput.scrollTop;
