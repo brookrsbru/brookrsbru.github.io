@@ -16,15 +16,12 @@
     <style>
         body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .dark { color-scheme: dark; }
         
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
         /* Grid Styles */
         #grid-container {
@@ -32,7 +29,6 @@
             overflow: auto;
             background-color: #f9fafb;
         }
-        .dark #grid-container { background-color: #09090b; }
         #grid-spacer {
             position: absolute;
             top: 0;
@@ -57,17 +53,10 @@
             cursor: pointer;
             user-select: none;
         }
-        .dark .cell {
-            background: #09090b;
-            border-right-color: #27272a;
-            border-bottom-color: #27272a;
-            color: #f4f4f5;
-        }
         .cell:hover {
             background-color: #eff6ff;
             z-index: 5;
         }
-        .dark .cell:hover { background-color: #1e1b4b; }
         .header-cell {
             position: absolute;
             background-color: #f3f4f6;
@@ -82,20 +71,10 @@
             user-select: none;
             z-index: 10;
         }
-        .dark .header-cell {
-            background-color: #18181b;
-            border-right-color: #3f3f46;
-            border-bottom-color: #3f3f46;
-            color: #a1a1aa;
-        }
         .header-cell.active {
             background-color: #dbeafe;
             color: #1d4ed8;
             font-weight: 700;
-        }
-        .dark .header-cell.active {
-            background-color: #1e3a8a;
-            color: #60a5fa;
         }
         .corner-cell {
             position: absolute;
@@ -107,11 +86,6 @@
             border-right: 1px solid #d1d5db;
             border-bottom: 1px solid #d1d5db;
             z-index: 30;
-        }
-        .dark .corner-cell {
-            background-color: #18181b;
-            border-right-color: #3f3f46;
-            border-bottom-color: #3f3f46;
         }
         #col-headers {
             position: sticky;
@@ -175,13 +149,59 @@
             max-width: 90%;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        .dark .modal-content {
-            background: #18181b;
-            color: #f4f4f5;
+
+        /* Formula Editor Styles */
+        .editor-container {
+            position: relative;
+            display: grid;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 1px solid #e5e7eb; /* zinc-200 */
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .editor-container:focus-within {
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .formula-backdrop, #formula-input {
+            grid-area: 1 / 1;
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            margin: 0;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+            background: transparent;
+            box-sizing: border-box;
+        }
+        .formula-backdrop {
+            pointer-events: none;
+            color: #71717a; /* zinc-400 */
+            z-index: 1;
+        }
+        #formula-input {
+            color: transparent;
+            caret-color: #18181b; /* zinc-900 */
+            z-index: 2;
+            resize: none;
+        }
+        .highlight-ref {
+            color: inherit;
+            background-color: rgba(59, 130, 246, 0.2); /* Default fallback */
+            border-radius: 2px;
         }
     </style>
 </head>
-<body class="bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 h-screen flex overflow-hidden transition-colors duration-300">
+<body class="bg-white text-zinc-900 h-screen flex overflow-hidden transition-colors duration-300">
 
     <!-- Main Workspace -->
     <div class="flex-1 flex flex-col min-w-0 relative">
@@ -195,41 +215,41 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="w-[40%] h-full flex flex-col border-l border-zinc-300 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+    <div class="w-[40%] h-full flex flex-col border-l border-zinc-300 bg-zinc-50">
         <!-- Formula Editor -->
         <div class="flex-1 p-6 flex flex-col min-h-0">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
-                    <a href="/" class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors" title="Back to Home">
+                    <a href="/" class="p-1.5 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-200 rounded-md transition-colors" title="Back to Home">
                         <i data-lucide="home" class="w-4 h-4"></i>
                     </a>
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Formula Editor</h2>
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Formula Editor</h2>
                 </div>
                 <div class="flex gap-2">
-                    <button id="theme-toggle" class="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-md transition-colors" title="Toggle Theme">
-                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
-                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-yellow-500"></i>
-                    </button>
-                    <button id="clear-btn" class="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors" title="Clear Formula">
+                    <button id="clear-btn" class="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Clear Formula">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
-                    <button id="copy-btn" class="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors" title="Copy to Clipboard">
+                    <button id="copy-btn" class="p-1.5 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors" title="Copy to Clipboard">
                         <i data-lucide="copy" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
-            <div class="flex-1 relative">
-                <textarea id="formula-input" 
-                    placeholder="Select cells or use buttons to build your formula..."
-                    class="w-full h-full p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none font-mono text-sm leading-relaxed transition-all dark:text-zinc-100"></textarea>
+            <div class="flex-1 min-h-0">
+                <div class="editor-container">
+                    <div id="formula-backdrop" class="formula-backdrop custom-scrollbar"></div>
+                    <textarea id="formula-input" 
+                        spellcheck="false"
+                        placeholder="Select cells or use buttons to build your formula..."
+                        class="custom-scrollbar"></textarea>
+                </div>
             </div>
         </div>
 
         <!-- Presets -->
-        <div class="h-[350px] border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 overflow-y-auto custom-scrollbar">
-            <div class="sticky top-0 bg-white dark:bg-zinc-950 z-10 px-6 pt-6 pb-4 flex items-center justify-between">
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Presets</h2>
-                <button id="manage-presets-btn" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline">Manage</button>
+        <div class="h-[350px] border-t border-zinc-200 bg-white overflow-y-auto custom-scrollbar">
+            <div class="sticky top-0 bg-white z-10 px-6 pt-6 pb-4 flex items-center justify-between">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Presets</h2>
+                <button id="manage-presets-btn" class="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline">Manage</button>
             </div>
             <div id="presets-container" class="px-6 pb-6 grid grid-cols-3 gap-3">
                 <!-- Presets will be rendered here via JS -->
@@ -241,20 +261,20 @@
     <div id="manage-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-zinc-900 dark:text-white">Add New Preset</h3>
-                <button id="close-modal" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                <h3 class="text-lg font-bold text-zinc-900">Add New Preset</h3>
+                <button id="close-modal" class="text-zinc-400 hover:text-zinc-600">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">Label</label>
-                    <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-zinc-100">
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Label</label>
+                    <input type="text" id="new-preset-label" placeholder="e.g. IFERROR" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all">
                     <p class="mt-1 text-[10px] text-zinc-400 italic">Use ¶ for line-break indicators</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">Formula Snippet</label>
-                    <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all h-24 resize-none font-mono text-sm dark:text-zinc-100"></textarea>
+                    <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-1">Formula Snippet</label>
+                    <textarea id="new-preset-add" placeholder="e.g. IFERROR(" class="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all h-24 resize-none font-mono text-sm"></textarea>
                 </div>
                 <button id="save-preset-btn" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">Save Preset</button>
             </div>
@@ -283,16 +303,26 @@
         let presets = [];
         let hoveredCell = null;
         let isManageMode = false;
+        let referencedCells = {}; // Map of "A1" -> color
+
+        const HIGHLIGHT_COLORS = [
+            { bg: 'bg-blue-500/20', border: 'border-blue-500', text: 'text-blue-600' },
+            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600' },
+            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600' },
+            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600' },
+            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600' },
+            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600' },
+        ];
 
         // --- DOM Elements ---
         const gridContainer = document.getElementById('grid-container');
         const gridSpacer = document.getElementById('grid-spacer');
         const gridContent = document.getElementById('grid-content');
         const formulaInput = document.getElementById('formula-input');
+        const formulaBackdrop = document.getElementById('formula-backdrop');
         const presetsContainer = document.getElementById('presets-container');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
-        const themeToggle = document.getElementById('theme-toggle');
         const managePresetsBtn = document.getElementById('manage-presets-btn');
         const manageModal = document.getElementById('manage-modal');
         const closeModalBtn = document.getElementById('close-modal');
@@ -332,20 +362,53 @@
             const newPos = start + text.length;
             formulaInput.setSelectionRange(newPos, newPos);
             saveFormula();
+            updateReferences();
+        }
+
+        function updateReferences() {
+            const formula = formulaInput.value;
+            const regex = /\b([A-Z]{1,3}[0-9]{1,7})\b/g;
+            const matches = [...new Set(formula.match(regex) || [])];
+            
+            referencedCells = {};
+            matches.forEach((ref, i) => {
+                referencedCells[ref] = HIGHLIGHT_COLORS[i % HIGHLIGHT_COLORS.length];
+            });
+
+            renderHighlighter();
+            renderGrid();
+        }
+
+        function renderHighlighter() {
+            const formula = formulaInput.value;
+            const regex = /\b([A-Z]{1,3}[0-9]{1,7})\b/g;
+            
+            let highlightedHtml = escapeHTML(formula);
+            
+            highlightedHtml = escapeHTML(formula).replace(regex, (match) => {
+                const color = referencedCells[match];
+                if (color) {
+                    return `<span class="highlight-ref ${color.bg} ${color.text}">${match}</span>`;
+                }
+                return match;
+            });
+
+            // Add a zero-width space if the last character is a newline to ensure the backdrop height matches
+            formulaBackdrop.innerHTML = highlightedHtml + (formula.endsWith('\n') ? ' ' : '');
         }
 
         // --- Rendering ---
         function renderPresets() {
             presetsContainer.innerHTML = presets.map((btn, index) => `
                 <div class="preset-btn-wrapper relative group">
-                    <button class="preset-btn w-full flex flex-col items-start p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:shadow-sm transition-all text-left group" data-index="${index}">
+                    <button class="preset-btn w-full flex flex-col items-start p-3 bg-zinc-50 border border-zinc-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all text-left group" data-index="${index}">
                         <span class="text-xs font-mono text-zinc-400 mb-1 group-hover:text-blue-400"></span>
-                        <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200 break-all leading-tight">
+                        <span class="text-sm font-medium text-zinc-700 break-all leading-tight">
                             ${btn.label.split('¶').map((part, i, arr) => `
                                 ${escapeHTML(part)}${i < arr.length - 1 ? '<span class="text-blue-500 font-bold mx-0.5">¶</span>' : ''}
                             `).join('')}
                         </span>
-                        <div class="mt-2 text-[10px] text-zinc-400 dark:text-zinc-500 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
+                        <div class="mt-2 text-[10px] text-zinc-400 font-mono truncate w-full">${escapeHTML(btn.add)}</div>
                     </button>
                     ${isManageMode ? `
                         <button class="preset-delete-btn opacity-100" data-delete-index="${index}">
@@ -415,12 +478,23 @@
                     const isRowHovered = hoveredCell && hoveredCell.r === r;
                     const isColHovered = hoveredCell && hoveredCell.c === c;
                     
-                    let bgClass = 'bg-white dark:bg-zinc-950';
-                    if (isHovered) bgClass = 'bg-blue-100 dark:bg-blue-900/40 ring-1 ring-inset ring-blue-400 dark:ring-blue-500 z-10';
-                    else if (isRowHovered || isColHovered) bgClass = 'bg-blue-50/50 dark:bg-blue-900/10';
+                    const cellRef = getColumnName(c) + (r + 1);
+                    const highlight = referencedCells[cellRef];
+
+                    let bgClass = 'bg-white';
+                    let borderClass = 'border-zinc-200';
+
+                    if (isHovered) {
+                        bgClass = 'bg-blue-100 ring-1 ring-inset ring-blue-400 z-10';
+                    } else if (highlight) {
+                        bgClass = highlight.bg;
+                        borderClass = highlight.border;
+                    } else if (isRowHovered || isColHovered) {
+                        bgClass = 'bg-blue-50/50';
+                    }
 
                     html += `
-                        <div class="cell ${bgClass}" 
+                        <div class="cell ${bgClass} ${borderClass}" 
                              style="left: ${left}px; top: ${top}px; width: ${COLUMN_WIDTH}px; height: ${ROW_HEIGHT}px;"
                              data-r="${r}" data-c="${c}">
                         </div>`;
@@ -482,13 +556,8 @@
         clearBtn.onclick = () => {
             formulaInput.value = '';
             saveFormula();
+            updateReferences();
             formulaInput.focus();
-        };
-
-        themeToggle.onclick = () => {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-            renderGrid();
         };
 
         managePresetsBtn.onclick = () => {
@@ -539,6 +608,7 @@
             const saved = localStorage.getItem('excel_current_formula');
             if (saved) {
                 formulaInput.value = saved;
+                updateReferences();
             }
         }
 
@@ -551,19 +621,12 @@
             }
         }
 
-        function loadTheme() {
-            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-            }
-        }
-
         // --- Initialization ---
         function init() {
             // Set spacer size
             gridSpacer.style.width = (ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH) + 'px';
             gridSpacer.style.height = (HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT) + 'px';
 
-            loadTheme();
             loadPresets();
             loadFormula();
             renderPresets();
@@ -573,7 +636,15 @@
 
         init();
 
-        formulaInput.oninput = saveFormula;
+        formulaInput.oninput = () => {
+            saveFormula();
+            updateReferences();
+        };
+
+        formulaInput.onscroll = () => {
+            formulaBackdrop.scrollTop = formulaInput.scrollTop;
+            formulaBackdrop.scrollLeft = formulaInput.scrollLeft;
+        };
 
         // Handle window resize
         window.onresize = renderGrid;
