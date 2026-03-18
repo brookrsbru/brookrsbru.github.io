@@ -230,6 +230,9 @@
                     <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-500">Formula Editor</h2>
                 </div>
                 <div class="flex gap-2">
+                    <button id="undo-btn" class="p-1.5 text-zinc-400 hover:text-orange-500 hover:bg-orange-50 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed" title="Undo (Max 5)" disabled>
+                        <i data-lucide="undo-2" class="w-4 h-4"></i>
+                    </button>
                     <button id="clear-btn" class="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Clear Formula">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
@@ -336,6 +339,9 @@
         let isManageMode = false;
         let referencedCells = {}; // Map of "A1" -> color
         let currentSelection = { start: 0, end: 0 };
+        let undoHistory = [];
+        const MAX_HISTORY = 5;
+        let lastManualValue = "";
 
         const HIGHLIGHT_COLORS = [
             { bg: 'bg-blue-500/20', border: 'border-blue-500', text: 'text-blue-600' },
@@ -355,6 +361,7 @@
         const presetsContainer = document.getElementById('presets-container');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
+        const undoBtn = document.getElementById('undo-btn');
         const toolsBtn = document.getElementById('tools-btn');
         const toolsModal = document.getElementById('tools-modal');
         const closeToolsModalBtn = document.getElementById('close-tools-modal');
@@ -410,7 +417,23 @@
             });
         }
 
+        function pushToHistory(value) {
+            if (undoHistory.length > 0 && undoHistory[undoHistory.length - 1] === value) return;
+            undoHistory.push(value);
+            if (undoHistory.length > MAX_HISTORY) {
+                undoHistory.shift();
+            }
+            updateUndoButton();
+        }
+
+        function updateUndoButton() {
+            if (undoBtn) {
+                undoBtn.disabled = undoHistory.length === 0;
+            }
+        }
+
         function insertAtCursor(text) {
+            pushToHistory(formulaInput.value);
             const start = formulaInput.selectionStart;
             const end = formulaInput.selectionEnd;
             const val = formulaInput.value;
@@ -685,9 +708,20 @@
         };
 
         clearBtn.onclick = () => {
+            pushToHistory(formulaInput.value);
             formulaInput.value = '';
             saveFormula();
             updateReferences();
+            formulaInput.focus();
+        };
+
+        undoBtn.onclick = () => {
+            if (undoHistory.length === 0) return;
+            const previousFormula = undoHistory.pop();
+            formulaInput.value = previousFormula;
+            saveFormula();
+            updateReferences();
+            updateUndoButton();
             formulaInput.focus();
         };
 
@@ -713,6 +747,8 @@
             const cols = parseInt(shiftColsInput.value) || 0;
             
             if (rows === 0 && cols === 0) return;
+
+            pushToHistory(formulaInput.value);
 
             const start = formulaInput.selectionStart;
             const end = formulaInput.selectionEnd;
@@ -797,6 +833,7 @@
             loadFormula();
             renderPresets();
             renderGrid();
+            updateUndoButton();
             lucide.createIcons();
         }
 
@@ -819,8 +856,16 @@
 
         formulaInput.onmouseup = updateSelection;
         formulaInput.onkeyup = updateSelection;
-        formulaInput.onfocus = updateSelection;
-        formulaInput.onblur = updateSelection;
+        formulaInput.onfocus = () => {
+            lastManualValue = formulaInput.value;
+            updateSelection();
+        };
+        formulaInput.onblur = () => {
+            if (formulaInput.value !== lastManualValue) {
+                pushToHistory(lastManualValue);
+            }
+            updateSelection();
+        };
 
         formulaInput.onscroll = () => {
             formulaBackdrop.scrollTop = formulaInput.scrollTop;
