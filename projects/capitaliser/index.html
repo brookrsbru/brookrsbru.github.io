@@ -75,20 +75,30 @@
                     break;
                 case 'title':
                     const minorWords = ['a', 'an', 'the', 'and', 'but', 'for', 'or', 'nor', 'at', 'by', 'from', 'in', 'into', 'of', 'off', 'on', 'onto', 'out', 'over', 'to', 'up', 'with', 'as'];
-                    result = text.toLowerCase().split(' ').map((word, index, words) => {
-                        if (index > 0 && index < words.length - 1 && minorWords.includes(word)) {
-                            return word;
+                    const parts = text.toLowerCase().split(/(\s+)/);
+                    const wordsOnly = parts.filter((p, i) => i % 2 === 0 && p.length > 0);
+                    let wordIndex = 0;
+                    result = parts.map((part, i) => {
+                        if (i % 2 !== 0 || part.length === 0) return part;
+                        
+                        const isFirst = wordIndex === 0;
+                        const isLast = wordIndex === wordsOnly.length - 1;
+                        wordIndex++;
+
+                        if (!isFirst && !isLast && minorWords.includes(part)) {
+                            return part;
                         }
-                        return word.charAt(0).toUpperCase() + word.slice(1);
-                    }).join(' ');
+                        return part.charAt(0).toUpperCase() + part.slice(1);
+                    }).join('');
                     break;
                 case 'sentence':
-                    result = text.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+                    result = text.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w|\n\s*\w)/g, c => c.toUpperCase());
                     break;
                 case 'first':
-                    result = text.toLowerCase().split(' ').map(word => {
-                        return word.charAt(0).toUpperCase() + word.slice(1);
-                    }).join(' ');
+                    result = text.toLowerCase().split(/(\s+)/).map(part => {
+                        if (part.length === 0 || /^\s+$/.test(part)) return part;
+                        return part.charAt(0).toUpperCase() + part.slice(1);
+                    }).join('');
                     break;
                 case 'toggle':
                     result = text.split('').map(char => {
