@@ -58,8 +58,16 @@
 
             <!-- Preview Area -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
-                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Rendered Preview</label>
-                <div id="preview-render" class="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-lg min-h-[60px]"></div>
+                <div class="flex items-center justify-between mb-3">
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">Rendered Preview</label>
+                    <label class="flex items-center cursor-pointer gap-2">
+                        <span class="text-xs font-medium text-zinc-500">Linebreaks to br</span>
+                        <div class="relative inline-block w-8 h-4 transition duration-200 ease-in-out bg-zinc-200 rounded-full">
+                            <input type="checkbox" id="linebreaks-toggle" checked class="absolute w-4 h-4 transition duration-200 ease-in-out transform bg-white border-2 border-zinc-200 rounded-full appearance-none cursor-pointer checked:translate-x-4 checked:bg-purple-600 checked:border-purple-600">
+                        </div>
+                    </label>
+                </div>
+                <div id="preview-render" class="w-full p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-lg min-h-[60px] whitespace-pre-wrap"></div>
             </div>
         </div>
     </div>
@@ -71,6 +79,15 @@
         const copyBtn = document.getElementById('copy-btn');
         const supBtn = document.getElementById('sup-btn');
         const subBtn = document.getElementById('sub-btn');
+        const linebreaksToggle = document.getElementById('linebreaks-toggle');
+
+        linebreaksToggle.addEventListener('change', () => {
+            if (linebreaksToggle.checked) {
+                preview.classList.add('whitespace-pre-wrap');
+            } else {
+                preview.classList.remove('whitespace-pre-wrap');
+            }
+        });
 
         const supMap = {
             '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
