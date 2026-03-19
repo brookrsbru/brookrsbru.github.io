@@ -236,31 +236,35 @@
         }
         .focus-line-h {
             position: absolute;
-            height: 1px;
-            background: rgba(16, 185, 129, 0.15);
+            height: 2px;
+            background: rgba(16, 185, 129, 0.25);
             pointer-events: none;
             z-index: 34;
+            transform: translateY(-50%);
         }
         .focus-line-v {
             position: absolute;
-            width: 1px;
-            background: rgba(16, 185, 129, 0.15);
+            width: 2px;
+            background: rgba(16, 185, 129, 0.25);
             pointer-events: none;
             z-index: 34;
+            transform: translateX(-50%);
         }
         .crosshair-h {
             position: absolute;
-            height: 1px;
-            background: rgba(16, 185, 129, 0.3);
+            height: 2px;
+            background: rgba(16, 185, 129, 0.45);
             pointer-events: none;
             z-index: 35;
+            transform: translateY(-50%);
         }
         .crosshair-v {
             position: absolute;
-            width: 1px;
-            background: rgba(16, 185, 129, 0.3);
+            width: 2px;
+            background: rgba(16, 185, 129, 0.45);
             pointer-events: none;
             z-index: 35;
+            transform: translateX(-50%);
         }
     </style>
 </head>
