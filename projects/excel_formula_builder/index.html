@@ -210,29 +210,55 @@
             filter: contrast(1.2);
         }
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 0 0 var(--pulse-color, rgba(16, 185, 129, 0.6)); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+            0% { 
+                box-shadow: 0 0 0 0 var(--pulse-color, rgba(16, 185, 129, 0.6));
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            70% { 
+                box-shadow: 0 0 0 40px rgba(0, 0, 0, 0);
+                transform: scale(1.05);
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+                transform: scale(1);
+            }
         }
         .active-ref-pulse {
-            animation: pulse-glow 1s infinite;
+            animation: pulse-glow 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
             z-index: 40;
             pointer-events: none;
-            border: 2px solid #10b981;
-            border-radius: 2px;
+            border: 3px solid #10b981;
+            border-radius: 4px;
             box-sizing: border-box;
+        }
+        .focus-line-h {
+            position: absolute;
+            height: 1px;
+            background: rgba(16, 185, 129, 0.15);
+            pointer-events: none;
+            z-index: 34;
+        }
+        .focus-line-v {
+            position: absolute;
+            width: 1px;
+            background: rgba(16, 185, 129, 0.15);
+            pointer-events: none;
+            z-index: 34;
         }
         .crosshair-h {
             position: absolute;
-            height: 2px;
-            background: linear-gradient(to right, transparent, rgba(16, 185, 129, 0.4), transparent);
+            height: 1px;
+            background: rgba(16, 185, 129, 0.3);
             pointer-events: none;
             z-index: 35;
         }
         .crosshair-v {
             position: absolute;
-            width: 2px;
-            background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.4), transparent);
+            width: 1px;
+            background: rgba(16, 185, 129, 0.3);
             pointer-events: none;
             z-index: 35;
         }
@@ -250,6 +276,10 @@
             </div>
             <div id="grid-indicators" class="absolute top-0 left-0 pointer-events-none" style="z-index: 35;">
                 <div id="active-pulse" class="active-ref-pulse absolute hidden"></div>
+                <div id="focus-line-h-top" class="focus-line-h hidden"></div>
+                <div id="focus-line-h-bottom" class="focus-line-h hidden"></div>
+                <div id="focus-line-v-left" class="focus-line-v hidden"></div>
+                <div id="focus-line-v-right" class="focus-line-v hidden"></div>
                 <div id="crosshair-h" class="crosshair-h hidden"></div>
                 <div id="crosshair-v" class="crosshair-v hidden"></div>
             </div>
@@ -399,6 +429,10 @@
         const formulaBackdrop = document.getElementById('formula-backdrop');
         const presetsContainer = document.getElementById('presets-container');
         const activePulse = document.getElementById('active-pulse');
+        const focusLineHTop = document.getElementById('focus-line-h-top');
+        const focusLineHBottom = document.getElementById('focus-line-h-bottom');
+        const focusLineVLeft = document.getElementById('focus-line-v-left');
+        const focusLineVRight = document.getElementById('focus-line-v-right');
         const crosshairH = document.getElementById('crosshair-h');
         const crosshairV = document.getElementById('crosshair-v');
         const copyBtn = document.getElementById('copy-btn');
@@ -718,19 +752,43 @@
                 activePulse.style.setProperty('--pulse-color', pulseColor);
                 activePulse.style.borderColor = borderColor;
 
-                // Crosshairs
-                const hTop = top + (ROW_HEIGHT / 2) - 1;
-                const vLeft = left + (COLUMN_WIDTH / 2) - 1;
+                // Focus Lines (Frame the cell)
+                const gridWidth = ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH;
+                const gridHeight = HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT;
+
+                focusLineHTop.style.display = 'block';
+                focusLineHTop.style.top = `${top}px`;
+                focusLineHTop.style.width = `${gridWidth}px`;
+
+                focusLineHBottom.style.display = 'block';
+                focusLineHBottom.style.top = `${top + ROW_HEIGHT}px`;
+                focusLineHBottom.style.width = `${gridWidth}px`;
+
+                focusLineVLeft.style.display = 'block';
+                focusLineVLeft.style.left = `${left}px`;
+                focusLineVLeft.style.height = `${gridHeight}px`;
+
+                focusLineVRight.style.display = 'block';
+                focusLineVRight.style.left = `${left + COLUMN_WIDTH}px`;
+                focusLineVRight.style.height = `${gridHeight}px`;
+
+                // Crosshairs (Center lines)
+                const hCenter = top + (ROW_HEIGHT / 2);
+                const vCenter = left + (COLUMN_WIDTH / 2);
                 
                 crosshairH.style.display = 'block';
-                crosshairH.style.top = `${hTop}px`;
-                crosshairH.style.width = `${ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH}px`;
+                crosshairH.style.top = `${hCenter}px`;
+                crosshairH.style.width = `${gridWidth}px`;
                 
                 crosshairV.style.display = 'block';
-                crosshairV.style.left = `${vLeft}px`;
-                crosshairV.style.height = `${HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT}px`;
+                crosshairV.style.left = `${vCenter}px`;
+                crosshairV.style.height = `${gridHeight}px`;
             } else {
                 activePulse.style.display = 'none';
+                focusLineHTop.style.display = 'none';
+                focusLineHBottom.style.display = 'none';
+                focusLineVLeft.style.display = 'none';
+                focusLineVRight.style.display = 'none';
                 crosshairH.style.display = 'none';
                 crosshairV.style.display = 'none';
             }
