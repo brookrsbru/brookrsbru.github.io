@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://brookrsbru.github.io/sitemap.xml
