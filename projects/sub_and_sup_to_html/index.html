@@ -200,6 +200,98 @@
             }
         });
 
+        input.addEventListener('paste', (e) => {
+            const html = e.clipboardData.getData('text/html');
+            if (html) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Check if the HTML actually contains sub/sup tags or styles
+                const hasSubSup = doc.querySelector('sub, sup') || 
+                                 Array.from(doc.querySelectorAll('*')).some(el => {
+                                     const styleAttr = el.getAttribute('style') || '';
+                                     const style = el.style || {};
+                                     const lowerStyle = styleAttr.toLowerCase();
+                                     return style.verticalAlign === 'sub' || 
+                                            style.verticalAlign === 'super' ||
+                                            lowerStyle.includes('vertical-align:sub') ||
+                                            lowerStyle.includes('vertical-align:super') ||
+                                            lowerStyle.includes('vertical-align: sub') ||
+                                            lowerStyle.includes('vertical-align: super') ||
+                                            lowerStyle.includes('mso-char-type:subscript') ||
+                                            lowerStyle.includes('mso-char-type:superscript') ||
+                                            lowerStyle.includes('baseline-shift:sub') ||
+                                            lowerStyle.includes('baseline-shift:super');
+                                 });
+
+                if (hasSubSup) {
+                    e.preventDefault();
+                    function processNode(node) {
+                        let text = '';
+                        node.childNodes.forEach(child => {
+                            if (child.nodeType === Node.TEXT_NODE) {
+                                text += child.textContent;
+                            } else if (child.nodeType === Node.ELEMENT_NODE) {
+                                const tagName = child.tagName.toLowerCase();
+                                const styleAttr = child.getAttribute('style') || '';
+                                const style = child.style || {};
+                                const lowerStyle = styleAttr.toLowerCase();
+                                
+                                // Detect "small" font size patterns often used to fake sub/sup
+                                const fontSize = lowerStyle.match(/font-size:\s*([^;]+)/)?.[1] || '';
+                                const isSmall = tagName === 'small' ||
+                                                fontSize.includes('smaller') || 
+                                                fontSize.includes('x-small') || 
+                                                fontSize.includes('xx-small') ||
+                                                (fontSize.includes('%') && parseFloat(fontSize) < 90) ||
+                                                (fontSize.includes('em') && parseFloat(fontSize) < 0.9) ||
+                                                (fontSize.includes('pt') && parseFloat(fontSize) < 9);
+
+                                const isSup = tagName === 'sup' || 
+                                              style.verticalAlign === 'super' || 
+                                              lowerStyle.includes('vertical-align:super') ||
+                                              lowerStyle.includes('vertical-align: super') ||
+                                              lowerStyle.includes('mso-char-type:superscript') ||
+                                              lowerStyle.includes('baseline-shift:super') ||
+                                              (isSmall && (lowerStyle.includes('vertical-align:top') || lowerStyle.includes('vertical-align: top') || lowerStyle.includes('vertical-align:text-top')));
+                                              
+                                const isSub = tagName === 'sub' || 
+                                              style.verticalAlign === 'sub' || 
+                                              lowerStyle.includes('vertical-align:sub') ||
+                                              lowerStyle.includes('vertical-align: sub') ||
+                                              lowerStyle.includes('mso-char-type:subscript') ||
+                                              lowerStyle.includes('baseline-shift:sub') ||
+                                              (isSmall && (lowerStyle.includes('vertical-align:bottom') || lowerStyle.includes('vertical-align: bottom') || lowerStyle.includes('vertical-align:text-bottom')));
+                                
+                                if (isSup) {
+                                    text += `<sup>${processNode(child)}</sup>`;
+                                } else if (isSub) {
+                                    text += `<sub>${processNode(child)}</sub>`;
+                                } else if (tagName === 'br') {
+                                    text += '\n';
+                                } else if (tagName === 'p' || tagName === 'div') {
+                                    const content = processNode(child);
+                                    if (content) text += content + '\n';
+                                } else {
+                                    text += processNode(child);
+                                }
+                            }
+                        });
+                        return text;
+                    }
+
+                    const processedText = processNode(doc.body);
+                    if (processedText.trim()) {
+                        document.execCommand('insertText', false, processedText);
+                    } else {
+                        const plainText = e.clipboardData.getData('text/plain');
+                        document.execCommand('insertText', false, plainText);
+                    }
+                }
+                // If no sub/sup found, let the default paste handle it (which will use text/plain)
+            }
+        });
+
         input.addEventListener('input', () => {
             const converted = convert(input.value);
             output.textContent = converted;
