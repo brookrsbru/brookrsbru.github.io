@@ -44,7 +44,13 @@
             <!-- Output Area -->
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-zinc-200">
                 <div class="flex items-center justify-between mb-3">
-                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">Output Text</label>
+                    <div class="flex items-center gap-3">
+                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-widest">Output Text</label>
+                        <div id="change-warning" class="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 hidden">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            <span>The input has changed. Please choose a capitalisation method again to update the output.</span>
+                        </div>
+                    </div>
                     <button id="copy-btn" onclick="copyOutput()" class="flex items-center gap-2 text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                         Copy Text
@@ -59,11 +65,13 @@
         const input = document.getElementById('input-text');
         const output = document.getElementById('output-text');
         const copyBtn = document.getElementById('copy-btn');
+        const warning = document.getElementById('change-warning');
 
         function transform(type) {
             const text = input.value;
             if (!text) return;
 
+            warning.classList.add('hidden');
             let result = '';
 
             switch (type) {
@@ -110,6 +118,12 @@
 
             output.value = result;
         }
+
+        input.addEventListener('input', () => {
+            if (output.value) {
+                warning.classList.remove('hidden');
+            }
+        });
 
         async function copyOutput() {
             if (!output.value) return;
