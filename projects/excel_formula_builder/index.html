@@ -69,7 +69,7 @@
             font-weight: 500;
             color: #4b5563;
             user-select: none;
-            z-index: 20;
+            z-index: 40;
         }
         .header-cell.active {
             background-color: #dcfce7; /* emerald-100 */
@@ -85,7 +85,7 @@
             background-color: #f3f4f6;
             border-right: 1px solid #d1d5db;
             border-bottom: 1px solid #d1d5db;
-            z-index: 30;
+            z-index: 50;
         }
         #col-headers {
             position: sticky;
@@ -234,28 +234,11 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        .focus-line-h {
-            position: absolute;
-            height: 2px;
-            background: rgba(16, 185, 129, 0.25);
-            pointer-events: none;
-            z-index: 34;
-            transform: translateY(-50%);
-        }
-        .focus-line-v {
-            position: absolute;
-            width: 2px;
-            background: rgba(16, 185, 129, 0.25);
-            pointer-events: none;
-            z-index: 34;
-            transform: translateX(-50%);
-        }
         .crosshair-h {
             position: absolute;
             height: 2px;
             background: rgba(16, 185, 129, 0.45);
             pointer-events: none;
-            z-index: 35;
             transform: translateY(-50%);
         }
         .crosshair-v {
@@ -263,7 +246,6 @@
             width: 2px;
             background: rgba(16, 185, 129, 0.45);
             pointer-events: none;
-            z-index: 35;
             transform: translateX(-50%);
         }
     </style>
@@ -276,16 +258,7 @@
             <div class="corner-cell"></div>
             <div id="grid-spacer"></div>
             <div id="grid-content">
-                <!-- Cells will be rendered here via JS -->
-            </div>
-            <div id="grid-indicators" class="absolute top-0 left-0 pointer-events-none" style="z-index: 35;">
-                <div id="active-pulse" class="active-ref-pulse absolute hidden"></div>
-                <div id="focus-line-h-top" class="focus-line-h hidden"></div>
-                <div id="focus-line-h-bottom" class="focus-line-h hidden"></div>
-                <div id="focus-line-v-left" class="focus-line-v hidden"></div>
-                <div id="focus-line-v-right" class="focus-line-v hidden"></div>
-                <div id="crosshair-h" class="crosshair-h hidden"></div>
-                <div id="crosshair-v" class="crosshair-v hidden"></div>
+                <!-- Cells and indicators will be rendered here via JS -->
             </div>
         </div>
     </div>
@@ -417,12 +390,12 @@
         let lastManualValue = "";
 
         const HIGHLIGHT_COLORS = [
-            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600', pulse: 'rgba(99, 102, 241, 0.6)' },
-            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600', pulse: 'rgba(16, 185, 129, 0.6)' },
-            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600', pulse: 'rgba(168, 85, 247, 0.6)' },
-            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600', pulse: 'rgba(249, 115, 22, 0.6)' },
-            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600', pulse: 'rgba(236, 72, 153, 0.6)' },
-            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600', pulse: 'rgba(6, 182, 212, 0.6)' },
+            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600', pulse: 'rgba(99, 102, 241, 0.6)', solid: '#6366f1' },
+            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600', pulse: 'rgba(16, 185, 129, 0.6)', solid: '#10b981' },
+            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600', pulse: 'rgba(168, 85, 247, 0.6)', solid: '#a855f7' },
+            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600', pulse: 'rgba(249, 115, 22, 0.6)', solid: '#f97316' },
+            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600', pulse: 'rgba(236, 72, 153, 0.6)', solid: '#ec4899' },
+            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600', pulse: 'rgba(6, 182, 212, 0.6)', solid: '#06b6d4' },
         ];
 
         // --- DOM Elements ---
@@ -432,13 +405,6 @@
         const formulaInput = document.getElementById('formula-input');
         const formulaBackdrop = document.getElementById('formula-backdrop');
         const presetsContainer = document.getElementById('presets-container');
-        const activePulse = document.getElementById('active-pulse');
-        const focusLineHTop = document.getElementById('focus-line-h-top');
-        const focusLineHBottom = document.getElementById('focus-line-h-bottom');
-        const focusLineVLeft = document.getElementById('focus-line-v-left');
-        const focusLineVRight = document.getElementById('focus-line-v-right');
-        const crosshairH = document.getElementById('crosshair-h');
-        const crosshairV = document.getElementById('crosshair-v');
         const copyBtn = document.getElementById('copy-btn');
         const clearBtn = document.getElementById('clear-btn');
         const undoBtn = document.getElementById('undo-btn');
@@ -727,74 +693,45 @@
             // Render Column Headers
             for (let c = startCol; c <= endCol; c++) {
                 const left = ROW_HEADER_WIDTH + c * COLUMN_WIDTH;
-                const isActive = (hoveredCell && hoveredCell.c === c) || (activeCell && activeCell.c === c);
-                html += `<div class="header-cell ${isActive ? 'active' : ''}" style="left: ${left}px; top: ${scrollTop}px; width: ${COLUMN_WIDTH}px; height: ${HEADER_HEIGHT}px;">${getColumnName(c)}</div>`;
+                html += `<div class="header-cell" style="left: ${left}px; top: ${scrollTop}px; width: ${COLUMN_WIDTH}px; height: ${HEADER_HEIGHT}px;">${getColumnName(c)}</div>`;
             }
 
             // Render Row Headers
             for (let r = startRow; r <= endRow; r++) {
                 const top = HEADER_HEIGHT + r * ROW_HEIGHT;
-                const isActive = (hoveredCell && hoveredCell.r === r) || (activeCell && activeCell.r === r);
-                html += `<div class="header-cell ${isActive ? 'active' : ''}" style="left: ${scrollLeft}px; top: ${top}px; width: ${ROW_HEADER_WIDTH}px; height: ${ROW_HEIGHT}px;">${r + 1}</div>`;
+                html += `<div class="header-cell" style="left: ${scrollLeft}px; top: ${top}px; width: ${ROW_HEADER_WIDTH}px; height: ${ROW_HEIGHT}px;">${r + 1}</div>`;
             }
 
-            // Update Persistent Indicators
+            // Render Persistent Indicators
             if (activeCell) {
                 const top = HEADER_HEIGHT + activeCell.r * ROW_HEIGHT;
                 const left = ROW_HEADER_WIDTH + activeCell.c * COLUMN_WIDTH;
                 const cellRef = getColumnName(activeCell.c) + (activeCell.r + 1);
                 const highlight = referencedCells[cellRef];
                 const pulseColor = highlight ? highlight.pulse : 'rgba(16, 185, 129, 0.6)';
-                const borderColor = highlight ? highlight.border.replace('border-', '') : '#10b981';
+                const solidColor = highlight ? highlight.solid : '#10b981';
 
-                // Pulse
-                activePulse.style.display = 'block';
-                activePulse.style.top = `${top}px`;
-                activePulse.style.left = `${left}px`;
-                activePulse.style.width = `${COLUMN_WIDTH}px`;
-                activePulse.style.height = `${ROW_HEIGHT}px`;
-                activePulse.style.setProperty('--pulse-color', pulseColor);
-                activePulse.style.borderColor = borderColor;
-
-                // Focus Lines (Frame the cell)
+                const hCenter = top + (ROW_HEIGHT / 2);
+                const vCenter = left + (COLUMN_WIDTH / 2);
                 const gridWidth = ROW_HEADER_WIDTH + COLUMN_COUNT * COLUMN_WIDTH;
                 const gridHeight = HEADER_HEIGHT + ROW_COUNT * ROW_HEIGHT;
 
-                focusLineHTop.style.display = 'block';
-                focusLineHTop.style.top = `${top}px`;
-                focusLineHTop.style.width = `${gridWidth}px`;
+                const cellRight = left + COLUMN_WIDTH;
+                const cellBottom = top + ROW_HEIGHT;
 
-                focusLineHBottom.style.display = 'block';
-                focusLineHBottom.style.top = `${top + ROW_HEIGHT}px`;
-                focusLineHBottom.style.width = `${gridWidth}px`;
+                // Pulse
+                html += `<div class="active-ref-pulse absolute" style="display: block; top: ${top}px; left: ${left}px; width: ${COLUMN_WIDTH}px; height: ${ROW_HEIGHT}px; z-index: 30; --pulse-color: ${pulseColor}; border-color: ${solidColor}; pointer-events: none;"></div>`;
 
-                focusLineVLeft.style.display = 'block';
-                focusLineVLeft.style.left = `${left}px`;
-                focusLineVLeft.style.height = `${gridHeight}px`;
-
-                focusLineVRight.style.display = 'block';
-                focusLineVRight.style.left = `${left + COLUMN_WIDTH}px`;
-                focusLineVRight.style.height = `${gridHeight}px`;
-
-                // Crosshairs (Center lines)
-                const hCenter = top + (ROW_HEIGHT / 2);
-                const vCenter = left + (COLUMN_WIDTH / 2);
+                // Crosshairs (4 segments to create a gap for the active cell)
+                const commonStyle = `display: block; z-index: 15; background-color: ${solidColor}; opacity: 0.4; pointer-events: none;`;
                 
-                crosshairH.style.display = 'block';
-                crosshairH.style.top = `${hCenter}px`;
-                crosshairH.style.width = `${gridWidth}px`;
+                // Horizontal segments
+                html += `<div class="crosshair-h" style="${commonStyle} top: ${hCenter}px; left: 0; width: ${left}px;"></div>`;
+                html += `<div class="crosshair-h" style="${commonStyle} top: ${hCenter}px; left: ${cellRight}px; width: ${gridWidth - cellRight}px;"></div>`;
                 
-                crosshairV.style.display = 'block';
-                crosshairV.style.left = `${vCenter}px`;
-                crosshairV.style.height = `${gridHeight}px`;
-            } else {
-                activePulse.style.display = 'none';
-                focusLineHTop.style.display = 'none';
-                focusLineHBottom.style.display = 'none';
-                focusLineVLeft.style.display = 'none';
-                focusLineVRight.style.display = 'none';
-                crosshairH.style.display = 'none';
-                crosshairV.style.display = 'none';
+                // Vertical segments
+                html += `<div class="crosshair-v" style="${commonStyle} left: ${vCenter}px; top: 0; height: ${top}px;"></div>`;
+                html += `<div class="crosshair-v" style="${commonStyle} left: ${vCenter}px; top: ${cellBottom}px; height: ${gridHeight - cellBottom}px;"></div>`;
             }
 
             // Render Cells
@@ -823,7 +760,7 @@
                     if (isActiveRef) {
                         // Pulse is now a persistent element, but we still want the cell background
                         if (!highlight) bgClass = 'bg-emerald-50';
-                        extraClass += ' z-20'; // Keep it above others
+                        extraClass += ' z-20'; // Above other highlighted cells (10) and crosshairs (15)
                     } else if (isHovered) {
                         extraClass += ' ring-2 ring-emerald-400 ring-inset z-10';
                         if (!highlight) bgClass = 'bg-emerald-100';
