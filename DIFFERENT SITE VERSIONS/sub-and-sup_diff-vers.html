@@ -5,8 +5,13 @@
     <meta name="description" content="A quick way to turn unicode or other format sub/superscripts into HTML.">
     
     <script>
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
+        // Configure Tailwind for class-based dark mode
+        tailwind.config = {
+            darkMode: 'class'
+        }
+
+        // Immediate check to prevent theme flickering
+        if (localStorage.getItem('theme') === 'light') {
             document.documentElement.classList.remove('dark');
         } else {
             document.documentElement.classList.add('dark');
@@ -32,11 +37,6 @@
     <title>Sub and Sup to HTML</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%239333ea%22/><g transform=%22scale(2.5) translate(8, 8)%22 stroke=%22white%22 stroke-width=%222%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22M17 6.1H3%22/><path d=%22M21 12.1H3%22/><path d=%22M15.1 18H3%22/></g></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -49,8 +49,9 @@
     </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen p-8 pt-16 transition-colors duration-200">
-    <a href="/" class="fixed top-4 left-4 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors z-50">
-        ↩ Back to main website
+    <a href="/" class="fixed top-4 left-4 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition-colors z-50">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Back to main website
     </a>
 
     <div class="max-w-3xl mx-auto">
@@ -58,9 +59,9 @@
             <div class="flex items-center gap-3">
                 <h1 class="text-2xl font-bold tracking-tight">Sub & Sup <span class="text-purple-600 dark:text-purple-400">to HTML</span></h1>
             </div>
-            <button id="theme-toggle" class="p-2 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-purple-600 transition-all">
-                <i data-lucide="sun" class="hidden dark:block w-5 h-5"></i>
-                <i data-lucide="moon" class="block dark:hidden w-5 h-5"></i>
+            <button id="theme-toggle" class="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-purple-500 transition-all group">
+                <i data-lucide="sun" class="hidden dark:block w-5 h-5 text-zinc-400 dark:text-purple-400 group-hover:text-purple-500 transition-colors"></i>
+                <i data-lucide="moon" class="block dark:hidden w-5 h-5 text-zinc-500 group-hover:text-purple-600 transition-colors"></i>
             </button>
         </header>
 

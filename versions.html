@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="CM-cl68V02aHyY7x3w3c-xMAw7pmt_B-TSY6l35x4Ag" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Hub</title>
+    <title>Project Hub - Different Versions</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%232563eb%22/><g transform=%22scale(2.5) translate(8, 8)%22 stroke=%22white%22 stroke-width=%222%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><rect width=%227%22 height=%227%22 x=%223%22 y=%223%22 rx=%221%22/><rect width=%227%22 height=%227%22 x=%2214%22 y=%223%22 rx=%221%22/><rect width=%227%22 height=%227%22 x=%2214%22 y=%2214%22 rx=%221%22/><rect width=%227%22 height=%227%22 x=%223%22 y=%2214%22 rx=%221%22/></g></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,22 +18,19 @@
         .project-card:hover { transform: translateY(-4px); }
     </style>
 </head>
-<body class="bg-zinc-50 text-zinc-900 transition-colors duration-300 min-h-screen flex flex-col">
+<body class="bg-zinc-950 text-zinc-100 transition-colors duration-300 min-h-screen flex flex-col">
     <!-- Header -->
     <header class="max-w-7xl mx-auto w-full px-6 pt-16 pb-12">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-                <a href="/versions.html" class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 cursor-default">
+                <a href="/" class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 cursor-default">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
                 </a>
-                <h1 class="text-2xl font-bold tracking-tight">Project <span class="text-blue-600">Hub</span></h1>
+                <h1 class="text-2xl font-bold tracking-tight">Project <span class="text-blue-500">Hub</span> <span class="text-zinc-500 text-lg font-medium ml-2">(Different Versions)</span></h1>
             </div>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScHWs7EmgyM-jQatEPrxbt67OGp98kfaUJyR-UJo16hD7MC8w/viewform?usp=dialog" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Feedback
+            <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                Back to Main
             </a>
         </div>
     </header>
@@ -42,52 +38,34 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto w-full px-6 flex-1 pb-20">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Excel Formula Builder -->
-            <a href="/projects/excel_formula_builder/" class="project-card group p-6 bg-white border border-zinc-200 rounded-2xl shadow-sm hover:shadow-md hover:border-emerald-500/50 transition-all">
-                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
-                </div>
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold">Excel Formula Builder</h3>
-                </div>
-                <div class="flex items-center text-emerald-600 text-sm font-semibold gap-2">
-                    Open Project
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
-            </a>
-
-            <!-- Sub and Sup to HTML -->
-            <a href="/projects/sub_and_sup_to_html/" class="project-card group p-6 bg-white border border-zinc-200 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-500/50 transition-all">
-                <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <!-- Sub and Sup to HTML (Diff Version) -->
+            <a href="/DIFFERENT%20SITE%20VERSIONS/sub-and-sup_diff-vers.html" class="project-card group p-6 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-sm hover:shadow-md hover:border-purple-500/50 transition-all">
+                <div class="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.1H3"/><path d="M21 12.1H3"/><path d="M15.1 18H3"/></svg>
                 </div>
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-bold">Sub and Sup to HTML</h3>
                 </div>
-                <div class="flex items-center text-purple-600 text-sm font-semibold gap-2">
-                    Open Project
+                <div class="flex items-center text-purple-400 text-sm font-semibold gap-2">
+                    Open Version
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
             </a>
 
-            <!-- Capitaliser -->
-            <a href="/projects/capitaliser/" class="project-card group p-6 bg-white border border-zinc-200 rounded-2xl shadow-sm hover:shadow-md hover:border-orange-500/50 transition-all">
-                <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <!-- Capitaliser (Diff Version) -->
+            <a href="/DIFFERENT%20SITE%20VERSIONS/capitaliser_diff-vers.html" class="project-card group p-6 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-sm hover:shadow-md hover:border-orange-500/50 transition-all">
+                <div class="w-12 h-12 bg-orange-500/10 text-orange-400 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 15 4-8 4 8"/><path d="M4 13h6"/><circle cx="18" cy="12" r="3"/><path d="M21 9v6"/></svg>
                 </div>
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-bold">Capitaliser</h3>
                 </div>
-                <div class="flex items-center text-orange-600 text-sm font-semibold gap-2">
-                    Open Project
+                <div class="flex items-center text-orange-400 text-sm font-semibold gap-2">
+                    Open Version
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
             </a>
         </div>
     </main>
-
-    <script>
-        const html = document.documentElement;
-    </script>
 </body>
 </html>
