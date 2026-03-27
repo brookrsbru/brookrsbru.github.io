@@ -78,11 +78,6 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button id="reset-size-btn-output" class="px-3 py-1.5 text-zinc-600 hover:text-orange-700 hover:bg-orange-100 rounded-lg text-xs font-bold transition-all flex items-center gap-2" title="Reset Textbox Size">
-                            <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
-                            Reset Size
-                        </button>
-                        <div class="w-px h-4 bg-zinc-300 mx-1"></div>
                         <button id="copy-btn" onclick="copyOutput()" class="flex items-center gap-2 text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             Copy Text
@@ -90,7 +85,7 @@
                     </div>
                 </div>
                 <textarea id="output-text" readonly placeholder="Transformed text will appear here..." 
-                    class="w-full h-40 p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-sm outline-none resize-y"></textarea>
+                    class="w-full h-40 p-4 bg-zinc-50 border border-zinc-200 rounded-xl text-sm outline-none resize-none overflow-hidden"></textarea>
             </div>
         </div>
     </div>
@@ -103,19 +98,13 @@
         const redoBtn = document.getElementById('redo-btn');
         const clearBtnInput = document.getElementById('clear-btn-input');
         const resetSizeBtnInput = document.getElementById('reset-size-btn-input');
-        const resetSizeBtnOutput = document.getElementById('reset-size-btn-output');
-
+        
         const INPUT_STORAGE_KEY = 'capitaliser_input_height';
-        const OUTPUT_STORAGE_KEY = 'capitaliser_output_height';
 
         // Load saved heights
         const savedInputHeight = localStorage.getItem(INPUT_STORAGE_KEY);
         if (savedInputHeight) {
             input.style.height = savedInputHeight + 'px';
-        }
-        const savedOutputHeight = localStorage.getItem(OUTPUT_STORAGE_KEY);
-        if (savedOutputHeight) {
-            output.style.height = savedOutputHeight + 'px';
         }
 
         // Save heights on resize
@@ -123,23 +112,20 @@
             for (let entry of entries) {
                 if (entry.target === input) {
                     localStorage.setItem(INPUT_STORAGE_KEY, input.offsetHeight);
-                } else if (entry.target === output) {
-                    localStorage.setItem(OUTPUT_STORAGE_KEY, output.offsetHeight);
                 }
             }
         });
         resizeObserver.observe(input);
-        resizeObserver.observe(output);
 
         resetSizeBtnInput.addEventListener('click', () => {
             input.style.height = '';
             localStorage.removeItem(INPUT_STORAGE_KEY);
         });
 
-        resetSizeBtnOutput.addEventListener('click', () => {
-            output.style.height = '';
-            localStorage.removeItem(OUTPUT_STORAGE_KEY);
-        });
+        function adjustOutputHeight() {
+            output.style.height = 'auto';
+            output.style.height = output.scrollHeight + 'px';
+        }
 
         function transform(type) {
             const text = input.value;
@@ -191,6 +177,7 @@
             }
 
             output.value = result;
+            adjustOutputHeight();
         }
 
         input.addEventListener('input', () => {
@@ -215,6 +202,7 @@
         clearBtnInput.addEventListener('click', () => {
             input.value = '';
             output.value = '';
+            adjustOutputHeight();
             warning.classList.add('hidden');
             input.focus();
             updateUndoRedoState();
