@@ -205,25 +205,7 @@
             font-weight: 700;
             filter: contrast(1.2);
         }
-        @keyframes pulse-glow {
-            0% { 
-                box-shadow: 0 0 0 0 var(--pulse-color, rgba(16, 185, 129, 0.6));
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.02);
-            }
-            70% { 
-                box-shadow: 0 0 0 40px rgba(0, 0, 0, 0);
-                transform: scale(1.05);
-            }
-            100% { 
-                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-                transform: scale(1);
-            }
-        }
         .active-ref-pulse {
-            animation: pulse-glow 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
             z-index: 40;
             pointer-events: none;
             border: 3px solid #10b981;
@@ -415,12 +397,12 @@
         let lastManualValue = "";
 
         const HIGHLIGHT_COLORS = [
-            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600', pulse: 'rgba(99, 102, 241, 0.6)', solid: '#6366f1' },
-            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600', pulse: 'rgba(16, 185, 129, 0.6)', solid: '#10b981' },
-            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600', pulse: 'rgba(168, 85, 247, 0.6)', solid: '#a855f7' },
-            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600', pulse: 'rgba(249, 115, 22, 0.6)', solid: '#f97316' },
-            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600', pulse: 'rgba(236, 72, 153, 0.6)', solid: '#ec4899' },
-            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600', pulse: 'rgba(6, 182, 212, 0.6)', solid: '#06b6d4' },
+            { bg: 'bg-indigo-500/20', border: 'border-indigo-500', text: 'text-indigo-600', solid: '#6366f1' },
+            { bg: 'bg-emerald-500/20', border: 'border-emerald-500', text: 'text-emerald-600', solid: '#10b981' },
+            { bg: 'bg-purple-500/20', border: 'border-purple-500', text: 'text-purple-600', solid: '#a855f7' },
+            { bg: 'bg-orange-500/20', border: 'border-orange-500', text: 'text-orange-600', solid: '#f97316' },
+            { bg: 'bg-pink-500/20', border: 'border-pink-500', text: 'text-pink-600', solid: '#ec4899' },
+            { bg: 'bg-cyan-500/20', border: 'border-cyan-500', text: 'text-cyan-600', solid: '#06b6d4' },
         ];
 
         // --- DOM Elements ---
@@ -761,7 +743,6 @@
                 const left = ROW_HEADER_WIDTH + activeCell.c * COLUMN_WIDTH;
                 const cellRef = getColumnName(activeCell.c) + (activeCell.r + 1);
                 const highlight = referencedCells[cellRef];
-                const pulseColor = highlight ? highlight.pulse : 'rgba(16, 185, 129, 0.6)';
                 const solidColor = highlight ? highlight.solid : '#10b981';
 
                 const hCenter = top + (ROW_HEIGHT / 2);
@@ -778,7 +759,6 @@
                 activePulse.style.left = `${left}px`;
                 activePulse.style.width = `${COLUMN_WIDTH}px`;
                 activePulse.style.height = `${ROW_HEIGHT}px`;
-                activePulse.style.setProperty('--pulse-color', pulseColor);
                 activePulse.style.borderColor = solidColor;
 
                 // Crosshairs
