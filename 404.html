@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+        (function() {
+            var path = window.location.pathname.toLowerCase();
+            var cleanPath = path.replace(/\/$/, '');
+            
+            // Handle Sawyer-Ship redirects
+            if (cleanPath.includes('sawyer-ship') || cleanPath.includes('sawyership')) {
+                window.location.href = '/Sawyer-Ship/';
+                return;
+            }
+            
+            // Handle other projects if needed (case-insensitive)
+            if (cleanPath === '/projects/excel_formula_builder') {
+                window.location.href = '/projects/excel_formula_builder/';
+                return;
+            }
+            if (cleanPath === '/projects/sub_and_sup_to_html') {
+                window.location.href = '/projects/sub_and_sup_to_html/';
+                return;
+            }
+            if (cleanPath === '/projects/capitaliser') {
+                window.location.href = '/projects/capitaliser/';
+                return;
+            }
+
+            // Default fallback
+            window.location.href = '/';
+        })();
+    </script>
+</head>
+<body>
+    Redirecting...
+</body>
+</html>
